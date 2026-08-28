@@ -9,6 +9,7 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
 import copy
+import os
 
 # ── Color Palette (Dark Premium Theme) ──────────────────────────────
 BG_DARK      = RGBColor(0x0D, 0x11, 0x17)   # #0D1117  near-black
@@ -188,7 +189,7 @@ add_pill_badge(slide, Inches(5.0), Inches(1.0), "GenAI + AGENTIC AI + GAME THEOR
 
 # Main title
 tf = add_text_box(slide, Inches(1.0), Inches(2.2), Inches(11.0), Inches(2.0))
-set_para(tf, "Self-Healing Networks via", font_size=42, color=TEXT_SECONDARY,
+set_para(tf, "Predictive Maintenance for", font_size=42, color=TEXT_SECONDARY,
          bold=False, font_name="Segoe UI Light")
 set_para(tf, "Counterfactual Telemetry", font_size=52, color=WHITE, bold=True,
          font_name="Segoe UI", is_first=False, space_before=Pt(4))
@@ -198,7 +199,7 @@ add_accent_line(slide, Inches(1.0), Inches(4.4), Inches(3.0), ACCENT_BLUE)
 
 # Subtitle
 tf = add_text_box(slide, Inches(1.0), Inches(4.7), Inches(10.0), Inches(1.2))
-set_para(tf, "Autonomous Predictive Maintenance using Generative & Agentic AI",
+set_para(tf, "Recommendation-Driven Predictive Maintenance using Generative & Agentic AI",
          font_size=20, color=TEXT_SECONDARY, font_name="Segoe UI")
 set_para(tf, "with Game-Theoretic Multi-Agent Optimization",
          font_size=20, color=ACCENT_PURPLE, font_name="Segoe UI", is_first=False)
@@ -261,10 +262,11 @@ abstract_text = (
 set_para(tf, abstract_text, font_size=13, color=TEXT_SECONDARY, space_after=Pt(12))
 
 abstract_text2 = (
-    "CTG-CPM introduces a novel closed-loop system that leverages Generative AI "
-    "(Time-Series Diffusion Models) to synthesize hypothetical future network telemetry, "
+    "CTG-CPM introduces a system that leverages Generative AI "
+    "(Time-Series Diffusion Models) to project hypothetical future network telemetry, "
     "Graph Neural Networks (GNNs) to enforce topology-aware constraints, and Multi-Agent "
-    "Agentic AI to autonomously diagnose, test, and deploy fixes \u2014 all within sub-second latency."
+    "Agentic AI to produce remediation recommendations. "
+    "Decision compute is sub-millisecond; commands are not auto-deployed in the prototype."
 )
 set_para(tf, abstract_text2, font_size=13, color=TEXT_PRIMARY, is_first=False, space_after=Pt(12))
 
@@ -277,9 +279,9 @@ set_para(tf, abstract_text3, font_size=13, color=ACCENT_PURPLE, is_first=False, 
 
 # Key metric badges at bottom
 metrics = [
-    ("< 10s MTTR", ACCENT_GREEN),
-    ("40% OPEX SAVINGS", ACCENT_BLUE),
-    ("ZERO-RISK FIXES", ACCENT_PURPLE),
+    ("FAST DECISION COMPUTE", ACCENT_GREEN),
+    ("POTENTIAL OPEX SAVINGS", ACCENT_BLUE),
+    ("RECOMMENDATION-BASED FIXES", ACCENT_PURPLE),
     ("3 PATENT CLAIMS", ACCENT_ORANGE),
 ]
 for i, (label, color) in enumerate(metrics):
@@ -361,8 +363,8 @@ set_para(tf, "Introducing CTG-CPM", font_size=36, color=WHITE, bold=True)
 add_accent_line(slide, Inches(0.8), Inches(1.75), Inches(2.0), ACCENT_GREEN)
 
 tf = add_text_box(slide, Inches(0.8), Inches(1.95), Inches(10.0), Inches(0.5))
-set_para(tf, "A closed-loop system that generates hypothetical futures, tests fixes in a "
-         "digital twin, and deploys the verified fix autonomously.",
+set_para(tf, "A system that generates counterfactual futures, evaluates candidate "
+         "remediations, and produces a RECOMMENDED command (not auto-deployed in the prototype).",
          font_size=14, color=TEXT_SECONDARY)
 
 # Three solution steps
@@ -375,9 +377,9 @@ steps = [
      "Multi-Agent AI analyzes this synthetic data to pinpoint exact root causes "
      "and test fixes. VCG auctions allocate tasks optimally.",
      ACCENT_PURPLE),
-    ("STEP 03", "Autonomous Remediation",
-     "The system verifies the fix in a digital twin sandbox via Nash Equilibrium "
-     "coordination, then deploys it to the live network.",
+    ("STEP 03", "Remediation Recommendation",
+     "The system selects a candidate via Nash Equilibrium coordination and "
+     "produces a recommended command. In the prototype it is NOT auto-deployed.",
      ACCENT_GREEN),
 ]
 
@@ -406,8 +408,8 @@ for i, (step, title, desc, color) in enumerate(steps):
 bar = add_shape(slide, Inches(0.8), Inches(6.5), Inches(11.5), Inches(0.6),
                 fill_color=RGBColor(0x0C, 0x1C, 0x0C), border_color=ACCENT_GREEN, border_width=Pt(1))
 tf = add_text_box(slide, Inches(1.2), Inches(6.55), Inches(10.7), Inches(0.5))
-set_para(tf, "OUR INNOVATION:   AI Predicts  \u2192  AI Generates Futures  \u2192  "
-         "AI Tests & Fixes Autonomously   \u2022  CLOSED-LOOP  \u2022  < 10 SECONDS",
+set_para(tf, "OUR APPROACH:   AI Detects  \u2192  AI Generates Counterfactual Futures  \u2192  "
+         "AI Recommends a Remediation   \u2022  DecisioN Compute ms  \u2022  Not Auto-Deployed",
          font_size=12, color=ACCENT_GREEN, bold=True, alignment=PP_ALIGN.CENTER)
 
 
@@ -427,14 +429,14 @@ set_para(tf, "The 4-Stage Patentable Pipeline", font_size=34, color=WHITE, bold=
 add_accent_line(slide, Inches(0.8), Inches(1.75), Inches(2.5), ACCENT_CYAN)
 
 tf = add_text_box(slide, Inches(0.8), Inches(1.95), Inches(10.0), Inches(0.4))
-set_para(tf, "From live telemetry ingestion to autonomous execution \u2014 a closed loop that runs in seconds.",
+set_para(tf, "From live telemetry ingestion to remediation recommendation \u2014 a closed pipeline that runs in milliseconds of decision compute (not deployment).",
          font_size=13, color=TEXT_SECONDARY)
 
 stages = [
-    ("01", "DETECT", "~1s", "GNN maps live topology\nand detects anomalies\n(thermal, optical, traffic)", ACCENT_BLUE),
-    ("02", "GENERATE", "~2s", "Diffusion model creates\nN counterfactual streams\nconditioned on K\ninterventions", ACCENT_PURPLE),
-    ("03", "SIMULATE", "~2s", "Agent 1: Root cause via\nShapley + Causal Inf.\nAgent 2: Test in DT\nAgent 3: Write fix script", ACCENT_GREEN),
-    ("04", "DEPLOY", "~5s", "NETCONF/YANG push\nverified config\n+ rollback engine\n+ full audit trail", ACCENT_ORANGE),
+    ("01", "DETECT", "live", "GNN maps live topology\nand detects anomalies\n(thermal, optical, traffic)", ACCENT_BLUE),
+    ("02", "GENERATE", "ms", "Diffusion model creates\nN counterfactual streams\nconditioned on K\ninterventions", ACCENT_PURPLE),
+    ("03", "SELECT", "ms", "Agent 1: Root cause via\nShapley\nAgent 2: SPE + VCG\nAgent 3: pick via projection", ACCENT_GREEN),
+    ("04", "RECOMMEND", "only", "Generates recommended\ncommand; NOT auto-deployed\nin the prototype", ACCENT_ORANGE),
 ]
 
 for i, (num, name, time_est, desc, color) in enumerate(stages):
@@ -473,8 +475,8 @@ for i, (num, name, time_est, desc, color) in enumerate(stages):
 bar = add_shape(slide, Inches(0.8), Inches(6.6), Inches(11.5), Inches(0.45),
                 fill_color=BG_CARD, border_color=ACCENT_CYAN, border_width=Pt(1))
 tf = add_text_box(slide, Inches(1.0), Inches(6.62), Inches(11.1), Inches(0.4))
-set_para(tf, "TOTAL END-TO-END LATENCY:  < 10 SECONDS   "
-         "\u2502  DETECT ~1s  \u2192  GENERATE ~2s  \u2192  SIMULATE ~2s  \u2192  DEPLOY ~5s",
+set_para(tf, "IN-PROCESS DECISION COMPUTE:  milliseconds   "
+         "\u2502  Excludes LLM round-trip and real device deployment; end-to-end MTTR not claimed",
          font_size=11, color=ACCENT_CYAN, bold=True, alignment=PP_ALIGN.CENTER)
 
 
@@ -533,8 +535,8 @@ set_para(tf, "Multi-Agent Causal Loop (Agentic AI Orchestration)", font_size=16,
 # Three agents
 agents = [
     ("Agent 1 \u2014 Diagnostician", "Granger Causality + Do-Calculus\nfor root cause identification", ACCENT_BLUE),
-    ("Agent 2 \u2014 Simulator", "Tests candidate fixes in\ndigital twin sandbox", ACCENT_GREEN),
-    ("Agent 3 \u2014 Executor", "Generates NETCONF/YANG\nconfiguration scripts", ACCENT_ORANGE),
+    ("Agent 2 \u2014 Projector", "Runs counterfactual diffusion\nto project 'what-if' outcomes", ACCENT_GREEN),
+    ("Agent 3 \u2014 Advisor", "Generates recommended\nNETCONF/YANG config draft", ACCENT_ORANGE),
 ]
 for i, (name, desc, clr) in enumerate(agents):
     x = Inches(1.1 + i * 3.7)
@@ -626,10 +628,10 @@ set_para(tf, "Key Advantages of CTG-CPM", font_size=34, color=WHITE, bold=True)
 add_accent_line(slide, Inches(0.8), Inches(1.65), Inches(2.0), ACCENT_GREEN)
 
 advantages = [
-    ("Sub-Second MTTR", "MTTR from hours/days to < 10 seconds", ACCENT_GREEN),
-    ("Zero-Risk Fixes", "Validated in digital twin before live deploy", ACCENT_BLUE),
-    ("40% OPEX Cut", "Eliminates unnecessary truck rolls", ACCENT_ORANGE),
-    ("Explainable RCA", "Shapley attribution for transparency", ACCENT_PURPLE),
+    ("Fast Decision Compute", "In-process compute is sub-millisecond (excludes LLM & deployment)", ACCENT_GREEN),
+    ("Projection-based Selection", "Remediation chosen from projected scenarios; not auto-deployed", ACCENT_BLUE),
+    ("Potential OPEX Benefit", "May avoid truck-rolls (not yet measured)", ACCENT_ORANGE),
+    ("Explainable Attribution", "Shapley attribution for transparency", ACCENT_PURPLE),
     ("Data Scarcity Fix", "GenAI creates unlimited synthetic data", ACCENT_CYAN),
     ("Topology-Aware", "GNN respects physical network constraints", ACCENT_GREEN),
     ("Optimal Coordination", "Game theory guarantees conflict-free ops", ACCENT_ORANGE),
@@ -678,8 +680,8 @@ disadvantages = [
      "Transfer learning from simulated environments (Simu5G)"),
     ("Sim-Reality Gap", "Digital twin may not perfectly replicate live behavior",
      "Domain randomization + periodic model recalibration"),
-    ("Regulatory Risk", "Autonomous remediation on critical infrastructure",
-     "Human-in-the-loop override + full audit trails"),
+    ("Regulatory Risk", "Applying recommended remediations on critical infrastructure",
+     "Human-in-the-loop approval + full audit trails"),
     ("Multi-Vendor Complexity", "NETCONF/YANG varies across vendors",
      "Vendor abstraction layer with per-vendor adaptors"),
     ("Game Theory Overhead", "VCG computation is NP-hard in general",
@@ -754,8 +756,8 @@ papers_1 = [
     ("1", "Diffusion-TS\nZeng, Chen, Zhang, Xu", "2024", "ICLR", "Denoising Diffusion\n+ Transformer", "We add GNN topology\nconstraints + intervention\nconditioning"),
     ("2", "TSDiff\nKollovieh, Ansari et al.", "2023", "NeurIPS", "Unconditional Diffusion\n+ Self-guidance", "CTG-CPM uses conditional\ngeneration tied to\nremediation actions"),
     ("3", "NetDiffusion\nJiang, Liu, Feamster et al.", "2024", "ACM\nPOMACS", "Protocol-aware\nStable Diffusion", "We generate telemetry-\nlevel counterfactuals,\nnot packet-level traffic"),
-    ("4", "Simba (5G RCA)\nHasan, Boeira et al.", "2024", "arXiv", "GNN +\nTransformer", "Simba detects only;\nCTG-CPM closes the\nloop to remediation"),
-    ("5", "Time-Series Diffusion\nSurvey — Yang et al.", "2024", "ACM\nComp.\nSurveys", "Survey of DDPM,\nScore-based models", "Survey only; CTG-CPM\nis a full end-to-end\ndeployed system"),
+    ("4", "Simba (5G RCA)\nHasan, Boeira et al.", "2024", "arXiv", "GNN +\nTransformer", "Simba detects only;\nCTG-CPM adds\nremediation recommendations"),
+    ("5", "Time-Series Diffusion\nSurvey — Yang et al.", "2024", "ACM\nComp.\nSurveys", "Survey of DDPM,\nScore-based models", "Survey only; CTG-CPM\nadds counterfactual\nremediation selection"),
     ("6", "Autohma-LLM\nIEEE TCCN authors", "2025", "IEEE\nTCCN", "LLM hybrid\nmulti-agent", "We use VCG auctions\nfor provable optimality\nvs. heuristic LLM prompts"),
     ("7", "GNN+SHAP for 5G SDN\nSciOpen / Tsinghua", "2024", "Big Data\nMining &\nAnalytics", "GNN + Multi-Head\nAttention + SHAP", "Shapley used in-loop\nfor real-time RCA,\nnot post-hoc explanation"),
     ("8", "VCG+MARL for 6G IoV\narXiv cs.GT / cs.NI", "2025", "arXiv", "VCG + MARL\nfor resource slicing", "VCG applied to\nremediation allocation,\nnot traffic management"),
@@ -809,8 +811,8 @@ papers_2 = [
     ("10", "Robust Adaptive Mechs.\narXiv cs.GT authors", "2025", "arXiv", "Online Learning\n+ VCG-style", "Theoretical only;\nCTG-CPM applies in\nconcrete network system"),
     ("11", "GAPPO Task Allocation\nMDPI Applied Sciences", "2024", "MDPI\nApplied\nSciences", "Genetic Algo\n+ PPO (MARL)", "We use formal game\ntheory guarantees, not\nevolutionary heuristics"),
     ("12", "MARL Network Healing\nIEEE Trans. Veh. Tech.", "2024", "IEEE\nTVT", "MAPPO,\nMADDPG", "CTG-CPM agents use\nsynthetic counterfactual\ndata, not just live obs."),
-    ("13", "Generative DT for PdM\nMDPI Machines", "2024", "MDPI\nMachines", "GAN-based\nDigital Twin", "Diffusion > GAN quality;\nplus agentic autonomous\nremediation layer"),
-    ("14", "Causal AI & Digital Twins\nIEEE/ACM ASE + RESS", "2025", "IEEE/ACM\nASE", "Causal DAGs,\nDo-Calculus", "Theoretical framework;\nCTG-CPM deploys a\nconcrete causal loop"),
+    ("13", "Generative DT for PdM\nMDPI Machines", "2024", "MDPI\nMachines", "GAN-based\nDigital Twin", "Diffusion > GAN quality;\nplus agentic recommendation layer not in scope"),
+    ("14", "Causal AI & Digital Twins\nIEEE/ACM ASE + RESS", "2025", "IEEE/ACM\nASE", "Causal DAGs,\nDo-Calculus", "Theoretical framework;\nCTG-CPM implements a\ncausal attribution loop"),
     ("15", "GenAI Edge PdM\nPothireddy N.K.R.", "2025", "IEEE\nTransactions", "Lightweight GenAI\nfor IoT edge", "Edge-focused only;\nCTG-CPM spans full\nnetwork + game theory"),
 ]
 
@@ -903,8 +905,8 @@ bar = add_shape(slide, Inches(0.5), Inches(6.4), Inches(12.0), Inches(0.5),
                 fill_color=BG_CARD, border_color=ACCENT_PURPLE, border_width=Pt(1))
 tf = add_text_box(slide, Inches(0.7), Inches(6.42), Inches(11.6), Inches(0.45))
 set_para(tf, "DATA FLOW:  Live Telemetry  \u2192  Graph Mapping  \u2192  "
-         "Counterfactual Generation  \u2192  Agent Testing  \u2192  Autonomous Deployment   "
-         "\u2502  5 LAYERS  \u2022  0 RESEARCH BETS",
+         "Counterfactual Projection  \u2192  Agent Selection  \u2192  Remediation Recommendation (not deployed)   "
+         "\u2502  5 LAYERS",
          font_size=10, color=ACCENT_PURPLE, bold=True, alignment=PP_ALIGN.CENTER)
 
 
@@ -928,17 +930,17 @@ set_para(tf, "A 5G optical transceiver shows micro-fluctuations in OSNR. Standar
 
 # 4 steps
 use_steps = [
-    ("01", "DETECT", "~1s",
+    ("01", "DETECT", "live",
      "GNN detects OSNR anomaly.\nCascade Risk Predictor flags\n3 downstream nodes at risk.",
      ACCENT_BLUE),
-    ("02", "GENERATE", "~2s",
+    ("02", "GENERATE", "ms",
      "Diffusion generates 5 counter-\nfactual streams: shift load,\nincrease laser bias, reroute,\nreduce traffic, replace HW.",
      ACCENT_PURPLE),
-    ("03", "SIMULATE", "~2s",
-     "VCG assigns Agent 1 to diagnose.\nShapley: Laser = 72% cause.\nAgent 2: Increasing laser bias\nstabilizes OSNR for 6+ months.",
+    ("03", "SELECT", "ms",
+     "VCG assigns Agent 1 to diagnose.\nShapley: Laser = 72% cause.\nAgent 2 picks the best\nprojection (not time-validated).",
      ACCENT_GREEN),
-    ("04", "DEPLOY", "~5s",
-     "Agent 3 generates NETCONF/\nYANG config change for laser\nbias. Validator approves.\nPushed live via API.",
+    ("04", "RECOMMEND", "only",
+     "Agent 3 generates a NETCONF/\nYANG config change for laser\nbias as a RECOMMENDATION.\nNot auto-deployed.",
      ACCENT_ORANGE),
 ]
 
@@ -979,8 +981,8 @@ for i, (label, color) in enumerate(results):
 bar = add_shape(slide, Inches(0.8), Inches(6.2), Inches(11.5), Inches(0.6),
                 fill_color=RGBColor(0x0C, 0x1C, 0x0C), border_color=ACCENT_GREEN, border_width=Pt(1))
 tf = add_text_box(slide, Inches(1.0), Inches(6.25), Inches(11.1), Inches(0.5))
-set_para(tf, "RESULT:  Software fix deployed autonomously \u2014 no service interruption, no hardware "
-         "replacement, equipment life extended 6 months. Total time: < 10 seconds.",
+set_para(tf, "RESULT:  Remediation RECOMMENDATION generated. In the prototype the command is NOT "
+         "auto-deployed; no service-interruption or equipment-life claims are made without live validation.",
          font_size=11, color=ACCENT_GREEN, bold=True, alignment=PP_ALIGN.CENTER)
 
 
@@ -1000,10 +1002,10 @@ add_accent_line(slide, Inches(0.8), Inches(1.6), Inches(2.0), ACCENT_GREEN)
 
 # 4 big KPI cards
 kpis = [
-    ("< 10", "SECONDS", "MTTR Reduction", "From hours/days to\nsingle-digit seconds", ACCENT_GREEN),
-    ("40%", "SAVINGS", "OPEX Reduction", "Eliminates unnecessary\nhardware truck rolls", ACCENT_BLUE),
-    ("100%", "VALIDATED", "Zero-Risk Fixes", "All fixes proven safe in\ndigital twin first", ACCENT_PURPLE),
-    ("0", "CASCADING", "Outages Prevented", "Stops failures from\nspreading across topology", ACCENT_ORANGE),
+    ("< few", "ms", "Decision Compute", "In-process compute only\n(excludes LLM & deployment)", ACCENT_GREEN),
+    ("POTENTIAL", "OPEX", "Truck-Roll Savings", "Not yet measured;\nprojected benefit only", ACCENT_BLUE),
+    ("RECOMMEND", "ONLY", "Safety Model", "Commands are recommended,\nnot auto-deployed", ACCENT_PURPLE),
+    ("0", "CASCADING", "Outages Prevented", "Claim—not yet validated\non live infrastructure", ACCENT_ORANGE),
 ]
 
 for i, (big_num, unit, title, desc, color) in enumerate(kpis):
@@ -1037,9 +1039,9 @@ tf = add_text_box(slide, Inches(1.2), Inches(5.2), Inches(3.0), Inches(0.3))
 set_para(tf, "ADDITIONAL KPIs", font_size=10, color=TEXT_DIM, bold=True)
 
 extra_kpis = [
-    ("Counterfactual Quality", "FID < 50", "Synthetic vs. real telemetry fidelity"),
-    ("Game-Theory Optimality", "\u2265 95%", "VCG social welfare vs. brute-force optimal"),
-    ("Model Inference", "< 500ms", "Per-component end-to-end latency"),
+    ("Counterfactual Quality", "TARGET FID < 50", "Target only; measured FID is currently far higher (poor on synthetic prior)"),
+    ("Game-Theory Optimality", "VCG-maximizing", "VCG assignment maximizes social welfare of stated bids (exact on given bids)"),
+    ("Decision Compute", "ms", "In-process compute only; excludes LLM & deployment"),
 ]
 for i, (name, value, desc) in enumerate(extra_kpis):
     x = Inches(1.2 + i * 3.7)
@@ -1146,7 +1148,7 @@ set_para(tf, "TECHNOLOGY STACK:  Kafka \u2022 InfluxDB \u2022 Neo4j \u2022 PyTor
 # SAVE
 # ════════════════════════════════════════════════════════════════════
 
-output_path = r"d:\Predictive Maintenance Project 3\CTG-CPM_Implementation_Plan.pptx"
+output_path = os.environ.get("OUTPUT_PPT_PATH", r"d:\Predictive Maintenance Project 3\CTG-CPM_Implementation_Plan.pptx")
 prs.save(output_path)
 print(f"\n{'='*60}")
 print(f"  SUCCESS: Presentation saved to:")

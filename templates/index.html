@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTG-CPM — Self-Healing Networks via Counterfactual Telemetry</title>
-    <meta name="description" content="Autonomous Predictive Maintenance using Generative AI, Game Theory, and Multi-Agent Orchestration. Sub-second MTTR, zero-risk remediation, 40% OPEX reduction.">
+    <title>CTG-CPM — Predictive Maintenance Recommendations via Counterfactual Telemetry</title>
+    <meta name="description" content="Predictive Maintenance Decision System using Generative AI, Game Theory, and Multi-Agent Orchestration. Produces remediation recommendations from live telemetry; commands are not auto-deployed in the prototype.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -509,11 +509,12 @@
 <!-- ═══════════════════════ HERO ═══════════════════════ -->
 <div class="hero">
     <div class="hero-left">
-        <div class="tag-line"><span class="dot"></span> Autonomous maintenance, made real-time</div>
+        <div class="tag-line"><span class="dot"></span> Predictive maintenance decisions, in real time</div>
         <h1>Your system's last check before <em>failure.</em></h1>
         <p class="hero-desc">
-            CTG-CPM is the self-healing intelligence layer for networks and systems.
-            Detect what's degrading, simulate the fix, verify in a digital twin, and deploy—all within seconds.
+            CTG-CPM projects counterfactual futures and game-theoretic remediation recommendations for networks
+            and systems. Detect what's degrading, project the fix outcomes, and get a recommended action.
+            In the prototype, commands are <b>recommendations only</b> — nothing is auto-deployed.
         </p>
         <div class="hero-buttons">
             <button class="btn-hero btn-hero-primary" onclick="document.getElementById('live-system').scrollIntoView({behavior:'smooth'})">
@@ -598,7 +599,7 @@
         <div class="step-card">
             <div class="step-num">03 / PROOF</div>
             <div class="step-title">End every handoff with evidence.</div>
-            <div class="step-desc">Once fixes are verified in the digital twin, generate a simple, business-readable record of what was inspected and resolved.</div>
+            <div class="step-desc">After a remediation is recommended, generate a simple, business-readable record of what was inspected and the projected outcome.</div>
             <div class="step-visual">
                 <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center;">
                     <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Health Readiness</div>
@@ -614,36 +615,37 @@
 <section id="kpis">
     <div class="section-tag">Expected Impact</div>
     <div class="section-heading">Transforming Operations</div>
-    <p class="section-desc">Not a percentage improvement—a categorical shift from hours to seconds.</p>
+    <p class="section-desc">From hours to seconds for the decision step. Scope is stated honestly below.</p>
     <div class="kpi-grid">
         <div class="kpi-card">
             <div class="kpi-value" style="color:var(--accent-cyan);">&lt;10</div>
-            <div class="kpi-unit">seconds</div>
-            <div class="kpi-label">Mean Time to Repair</div>
+            <div class="kpi-unit">ms</div>
+            <div class="kpi-label">In-process decision compute*</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-value" style="color:var(--accent-green);">40%</div>
-            <div class="kpi-unit">reduction</div>
-            <div class="kpi-label">OPEX Savings (Zero Truck Rolls)</div>
+            <div class="kpi-value" style="color:var(--accent-green);">Potential</div>
+            <div class="kpi-unit">not measured</div>
+            <div class="kpi-label">OPEX Savings / Fewer Truck Rolls</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-value" style="color:var(--accent-purple);">100%</div>
-            <div class="kpi-unit">validated</div>
-            <div class="kpi-label">Zero-Risk Remediation</div>
+            <div class="kpi-value" style="color:var(--accent-purple);">No Fix</div>
+            <div class="kpi-unit">auto-applied</div>
+            <div class="kpi-label">Commands are recommendations only</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-value" style="color:var(--accent-amber);">0</div>
-            <div class="kpi-unit">cascading</div>
-            <div class="kpi-label">Outages Prevented</div>
+            <div class="kpi-value" style="color:var(--accent-amber);">-</div>
+            <div class="kpi-unit">n/a</div>
+            <div class="kpi-label">Cascading Outages (not claimed)</div>
         </div>
     </div>
+    <p class="section-desc" style="font-size:0.85rem;color:var(--text-muted);">*Decision-compute time excludes LLM round-trip and any real device deployment.</p>
 </section>
 
 <!-- ═══════════════════════ LIVE SYSTEM ═══════════════════════ -->
 <section id="live-system">
     <div class="section-tag">LIVE INSPECTION</div>
     <div class="section-heading">Run a live scan. <em>See it heal.</em></div>
-    <p class="section-desc">Stream real-time telemetry from this machine, inject a failure scenario, then watch CTG-CPM autonomously diagnose and remediate.</p>
+    <p class="section-desc">Stream real-time telemetry from this machine, inject a failure scenario, then watch CTG-CPM generate a remediation recommendation.</p>
 
     <div class="controls-row">
         <select id="modeSelect" class="mode-select" onchange="switchMode()">
@@ -651,7 +653,7 @@
             <option value="5g_network">📡 5G Optical Backhaul (Simulated)</option>
         </select>
         <button class="btn-action btn-inject" onclick="injectAnomaly()" id="btnInject">⚡ Inject Failure Anomaly</button>
-        <button class="btn-action btn-heal" onclick="runHealing()" id="btnHeal">🛡️ Trigger Self-Healing</button>
+        <button class="btn-action btn-heal" onclick="runHealing()" id="btnHeal">🛡️ Generate Remediation</button>
         <div class="status-banner status-healthy" id="systemStatus">
             <span class="live-dot"></span> System Healthy
         </div>
@@ -680,7 +682,7 @@
         </div>
     </div>
 
-    <!-- Diagnosis Panel (appears after self-healing) -->
+    <!-- Diagnosis Panel (appears after pipeline run) -->
     <div class="diagnosis-panel" id="diagPanel">
         <div class="diag-header">
             <div>
@@ -721,8 +723,8 @@
                     <div class="diag-block-title">🎯 Expected Outcome</div>
                     <div class="diag-block-content" id="diagOutcome">—</div>
                     <div style="display:flex; gap: 20px; margin-top: 16px; font-size: 0.85rem;">
-                        <div style="color:var(--accent-green);">🚫 Truck Roll Avoided: <strong id="diagTruckRoll">Yes</strong></div>
-                        <div style="color:var(--accent-cyan);">⏱️ Fix Time: <strong id="diagFixTime">< 10s</strong></div>
+                        <div style="color:var(--accent-green);">🚫 Truck Roll Avoided: <strong id="diagTruckRoll">Unknown (not measured)</strong></div>
+                        <div style="color:var(--accent-cyan);">⏱️ Decision Compute: <strong id="diagFixTime">—</strong></div>
                         <div style="color:var(--accent-amber);">🛡️ Downtime Prevented: <strong id="diagDowntime">—</strong></div>
                     </div>
                 </div>
@@ -885,10 +887,10 @@
             document.getElementById("diagScoreBefore").textContent = diag.health_score_before ?? "30";
             document.getElementById("diagScoreAfter").textContent = diag.health_score_after ?? "83";
             document.getElementById("diagOutcome").textContent = diag.expected_outcome || "—";
-            document.getElementById("diagTruckRoll").textContent = diag.truck_roll_avoided ? "Yes" : "No";
-            document.getElementById("diagFixTime").textContent = diag.estimated_fix_time || "< 10s";
+            document.getElementById("diagTruckRoll").textContent = (diag.truck_roll_avoided && diag.truck_roll_avoided !== "unknown") ? diag.truck_roll_avoided : "Unknown (not measured)";
+            document.getElementById("diagFixTime").textContent = diag.estimated_fix_time || "Decision compute only (ms)";
             document.getElementById("diagDowntime").textContent = diag.downtime_prevented || "—";
-            document.getElementById("diagModel").textContent = diag.llm_powered ? `LLM: ${diag.model || "llama-3.3-70b"}` : "Fallback Engine";
+            document.getElementById("diagModel").textContent = diag.llm_powered ? (diag.model ? `LLM: ${diag.model}` : "LLM") : "Fallback Engine";
 
             // Remediation steps
             const stepsContainer = document.getElementById("diagSteps");
@@ -912,12 +914,13 @@
                 const cfEl = document.getElementById("cfScenarios");
                 cfEl.innerHTML = "";
                 for (const [name, data] of Object.entries(result.counterfactual_scenarios)) {
-                    const isSafe = data.is_stabilized;
+                    const isSafe = data.projected_stabilized;
                     cfEl.innerHTML += `
                         <div class="cf-scenario">
                             <span class="cf-name">${name}</span>
-                            <span class="cf-score" style="color:${isSafe ? 'var(--accent-green)' : 'var(--accent-red)'}">${data.health_score}</span>
-                            <span class="cf-badge ${isSafe ? 'cf-safe' : 'cf-unsafe'}">${isSafe ? 'Stabilized' : 'Unstable'}</span>
+                            <span class="cf-score" style="color:${isSafe ? 'var(--accent-green)' : 'var(--accent-red)'}">${data.projected_health_score}</span>
+                            <span class="cf-badge ${isSafe ? 'cf-safe' : 'cf-unsafe'}">${isSafe ? 'Projected Stable' : 'Projected Unstable'}</span>
+                            <span class="cf-badge" style="background:var(--accent-amber);margin-top:2px;">${data.generator || 'heuristic'}</span>
                         </div>`;
                 }
             }
@@ -930,7 +933,7 @@
         } catch(e) { console.error("Pipeline error:", e); }
 
         btn.disabled = false;
-        btn.innerHTML = '🛡️ Trigger Self-Healing';
+        btn.innerHTML = '🛡️ Generate Remediation';
     }
 
     // Poll telemetry

@@ -11,6 +11,7 @@ from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
 from lxml import etree
+import os
 
 # ── Color Palette (Dark Theme) ──────────────────────────────────────
 BG_DARK       = RGBColor(0x0D, 0x11, 0x17)   # Near-black #0D1117
@@ -134,7 +135,7 @@ add_pill_badge(slide, Inches(3.2), Inches(0.8), "DESIGN, DEVELOPMENT & PROGRESS"
 
 tf = add_text_box(slide, Inches(0.8), Inches(1.8), Inches(11.5), Inches(2.2))
 set_para(tf, "CTG-CPM: Self-Healing Networks via Counterfactual Telemetry", font_size=36, color=WHITE, bold=True)
-set_para(tf, "Autonomous Predictive Maintenance using Generative AI, Game Theory & Multi-Agent Orchestration",
+set_para(tf, "Predictive Maintenance Recommendation using Generative AI, Game Theory & Multi-Agent Orchestration",
          font_size=18, color=ACCENT_CYAN, is_first=False, space_before=Pt(8))
 
 add_accent_line(slide, Inches(0.8), Inches(4.1), Inches(3.0), ACCENT_BLUE)
@@ -173,7 +174,7 @@ card1 = add_shape(slide, Inches(0.8), Inches(1.8), Inches(5.6), Inches(5.0), fil
 tf1 = add_text_box(slide, Inches(1.0), Inches(2.0), Inches(5.2), Inches(4.6))
 set_para(tf1, "PROJECT ABSTRACT", font_size=14, color=ACCENT_BLUE, bold=True)
 set_para(tf1, "Current predictive maintenance (PdM) operates as an opaque 'black box' — predicting failures without explaining why or how to fix them.", font_size=11, color=TEXT_SECONDARY, is_first=False, space_before=Pt(6))
-set_para(tf1, "CTG-CPM introduces a closed-loop self-healing network system combining:", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
+set_para(tf1, "CTG-CPM is a closed-loop predictive maintenance recommendation system combining:", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
 set_para(tf1, "1. Time-Series Diffusion Models for counterfactual 'What-If' future telemetry.", font_size=11, color=ACCENT_PURPLE, is_first=False)
 set_para(tf1, "2. Graph Neural Networks (GraphSAGE) for topology-aware anomaly detection.", font_size=11, color=ACCENT_GREEN, is_first=False)
 set_para(tf1, "3. Algorithmic Game Theory (VCG, Shapley, Nash) for provable agent coordination.", font_size=11, color=ACCENT_ORANGE, is_first=False)
@@ -210,7 +211,7 @@ layers = [
     ("LAYER 2: TOPOLOGY GNN", "GraphSAGE Topology Mapper & Anomaly Propagation Predictor", ACCENT_GREEN),
     ("LAYER 3: GenAI COUNTERFACTUAL", "Time-Series Diffusion Model generating parallel 'What-If' futures", ACCENT_PURPLE),
     ("LAYER 4: AGENTIC GAME THEORY", "Multi-Agent Loop: VCG Auction, Shapley RCA, Nash Equilibrium & SPE Solver", ACCENT_ORANGE),
-    ("LAYER 5: AUTONOMOUS EXECUTION", "Digital Twin Verification, NETCONF/YANG & PowerShell Script Deployment", ACCENT_CYAN),
+    ("LAYER 5: REMEDIATION RECOMMENDATION", "Counterfactual projection selection; generates a recommended command (NOT auto-deployed)", ACCENT_CYAN),
 ]
 
 for i, (lname, ldesc, color) in enumerate(layers):
@@ -234,10 +235,10 @@ set_para(tf, "Detailed 4-Stage Process Pipeline", font_size=28, color=WHITE, bol
 add_accent_line(slide, Inches(0.8), Inches(1.55), Inches(2.0), ACCENT_CYAN)
 
 stages = [
-    ("STAGE 1: DETECT (~1s)", "GNN maps live topology and detects telemetry anomalies (OSNR drops, thermal spikes).", ACCENT_BLUE),
-    ("STAGE 2: GENERATE (~2s)", "Diffusion model generates N synthetic counterfactual future telemetry streams under candidate interventions.", ACCENT_PURPLE),
-    ("STAGE 3: SIMULATE (~2s)", "Agent 1 diagnoses root cause via Shapley Values; Agent 2 runs SPE Game & VCG auction; Agent 3 tests in Digital Twin.", ACCENT_GREEN),
-    ("STAGE 4: DEPLOY (~5s)", "NETCONF/YANG & PowerShell execution script pushed to live system with automated rollback protection.", ACCENT_ORANGE),
+    ("STAGE 1: DETECT", "GNN maps live topology and detects telemetry anomalies (OSNR drops, thermal spikes).", ACCENT_BLUE),
+    ("STAGE 2: GENERATE", "Diffusion model generates N synthetic counterfactual future telemetry streams under candidate interventions.", ACCENT_PURPLE),
+    ("STAGE 3: SELECT", "Agent 1 diagnoses root cause via Shapley Values; Agent 2 runs SPE Game & VCG auction; Agent 3 selects candidate via counterfactual projection.", ACCENT_GREEN),
+    ("STAGE 4: RECOMMEND (NOT DEPLOYED)", "Produces a recommended NETCONF/YANG & PowerShell command. Auto-deployment is disabled in the prototype.", ACCENT_ORANGE),
 ]
 
 for i, (stitle, sdesc, color) in enumerate(stages):
@@ -276,7 +277,7 @@ set_para(tf2, "ALGORITHM 2: GRAPHSAGE GRAPH NEURAL NETWORK", font_size=13, color
 set_para(tf2, "Topology-Aware Anomaly Detection", font_size=10, color=TEXT_DIM, is_first=False)
 set_para(tf2, "• Spatial-Temporal Learning: Learns node embeddings capturing both inter-device graph topology and time-series metric streams.", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(8))
 set_para(tf2, "• Anomaly Propagation Modeling: Predicts downstream cascade failure risk when an optical node or CPU core degrades.", font_size=11, color=TEXT_SECONDARY, is_first=False)
-set_para(tf2, "• Dynamic Graphs: Topology refreshed every 60s to maintain digital twin sync.", font_size=11, color=TEXT_SECONDARY, is_first=False)
+set_para(tf2, "• Dynamic Graphs: Topology refreshed periodically to keep node embeddings current.", font_size=11, color=TEXT_SECONDARY, is_first=False)
 
 # ====================================================================
 # SLIDE 6: DEEP DIVE — ALGORITHMS (PART 2: ALGORITHMIC GAME THEORY)
@@ -341,8 +342,8 @@ code_sample = (
     "    {'step': 2, 'action': 'Apply CPU Throttle 85%'},\n"
     "    {'step': 3, 'action': 'Optimize Memory Cache'}\n"
     "  ],\n"
-    "  'truck_roll_avoided': true,\n"
-    "  'estimated_fix_time': '< 10 seconds'\n"
+    "  'truck_roll_avoided': 'potential (not measured)',\n"
+    "  'estimated_fix_time': 'decision compute only (excludes deployment)'\n"
     "}"
 )
 set_para(tf2, code_sample, font_size=10, color=ACCENT_GREEN, is_first=False, space_before=Pt(6))
@@ -363,7 +364,7 @@ progress_items = [
     ("Fully Built Core Engine", "Implemented all Python backend modules: game_engine.py, telemetry_collector.py, counterfactual_engine.py, agentic_remediator.py.", ACCENT_BLUE),
     ("Groq LLM Integration", "Created llm_diagnostician.py using openai/gpt-oss-20b model for structured, human-readable problem diagnosis and remediation.", ACCENT_PURPLE),
     ("HMW-Inspired Web Dashboard", "Developed modern glassmorphism web application (app.py + index.html) with real-time graphs, anomaly injection, and diagnostic panel.", ACCENT_GREEN),
-    ("100% Automated Test Pass", "Written test_prototype.py test suite covering all 5 core modules — 100% pass rate in 0.87s with MTTR < 10s benchmark.", ACCENT_ORANGE),
+    ("Automated Test Suite", "test_prototype.py unit/integration tests covering 5 core modules (Kafka test asserts honest status rather than emulating a broker).", ACCENT_ORANGE),
 ]
 
 for i, (ptitle, pdesc, color) in enumerate(progress_items):
@@ -405,7 +406,7 @@ files = [
     ("agentic_remediator.py", "3-Agent closed-loop orchestrator"),
     ("llm_diagnostician.py", "Groq LLM structured diagnosis generator"),
     ("app.py & templates/index.html", "Flask web app & glassmorphism UI"),
-    ("main.py", "CLI orchestrator (sub-second MTTR < 1ms)"),
+    ("main.py", "CLI orchestrator (in-process decision compute)"),
 ]
 for fname, fdesc in files:
     set_para(tf2, f"• {fname}", font_size=10, color=WHITE, bold=True, is_first=False, space_before=Pt(4))
@@ -425,9 +426,9 @@ add_accent_line(slide, Inches(0.8), Inches(1.55), Inches(2.0), ACCENT_PURPLE)
 
 choices = [
     ("Time-Series Diffusion vs. GANs", "Diffusion models avoid mode collapse, provide superior sample quality, and support conditional generation on intervention variables.", ACCENT_BLUE),
-    ("GraphSAGE GNN vs. Standard CNNs", "Network topology is inherently non-Euclidean; GraphSAGE models spatial node connectivity and cascading failure propagation.", ACCENT_GREEN),
-    ("VCG & Nash Theory vs. Heuristic Prompting", "LLM prompting lacks safety guarantees; game theory provides mathematical proof of DSIC truthfulness and stable equilibrium.", ACCENT_PURPLE),
-    ("Groq Cloud LPU vs. Local LLMs", "Groq LPU architecture yields 500+ tokens/sec, enabling sub-second LLM diagnosis (< 1s latency) required for < 10s MTTR.", ACCENT_ORANGE),
+    ("GNN vs. Standard CNNs", "Network topology is inherently non-Euclidean; our GNN (GCN or GraphSAGE, reported per run) models spatial node connectivity and cascading failure propagation.", ACCENT_GREEN),
+    ("VCG & Nash Theory vs. Heuristic Prompting", "Game theory provides formal guarantees (DSIC truthfulness, stable equilibrium) that heuristic prompting lacks.", ACCENT_PURPLE),
+    ("Groq Cloud LPU vs. Local LLMs", "Groq LPU offers fast LLM inference useful for the diagnostic step; it is additive to (not the whole) end-to-end MTTR.", ACCENT_ORANGE),
 ]
 
 for i, (ctitle, cdesc, color) in enumerate(choices):
@@ -451,16 +452,16 @@ add_accent_line(slide, Inches(0.8), Inches(1.55), Inches(2.0), ACCENT_ORANGE)
 
 card1 = add_shape(slide, Inches(0.8), Inches(1.8), Inches(5.6), Inches(5.0), fill_color=BG_CARD, border_color=ACCENT_GREEN)
 tf1 = add_text_box(slide, Inches(1.0), Inches(2.0), Inches(5.2), Inches(4.6))
-set_para(tf1, "OPEX SAVINGS & HARDWARE COST", font_size=13, color=ACCENT_GREEN, bold=True)
-set_para(tf1, "• 40% Reduction in Truck Rolls: Eliminates preemptive physical hardware replacements by finding configuration fixes.", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
-set_para(tf1, "• Hardware Life Extension: E.g., optical laser bias adjustment extends transceiver operational lifespan by 6+ months.", font_size=11, color=TEXT_SECONDARY, is_first=False)
-set_para(tf1, "• Zero Physical Component Cost Increase: Uses existing telemetry streams (SNMP, gNMI, psutil) without new hardware sensors.", font_size=11, color=TEXT_SECONDARY, is_first=False)
+set_para(tf1, "POTENTIAL OPEX & HARDWARE COST", font_size=13, color=ACCENT_GREEN, bold=True)
+set_para(tf1, "• Potential Truck-Roll Reduction: May avoid physical hardware replacement by recommending configuration fixes (potential benefit, not measured).", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
+set_para(tf1, "• Possible Hardware Life Extension: E.g., optical laser bias adjustment might extend transceiver lifespan (not yet validated live).", font_size=11, color=TEXT_SECONDARY, is_first=False)
+set_para(tf1, "• No New Sensor Cost: Uses existing telemetry streams (SNMP, gNMI, psutil) without new hardware sensors.", font_size=11, color=TEXT_SECONDARY, is_first=False)
 
 card2 = add_shape(slide, Inches(6.8), Inches(1.8), Inches(5.7), Inches(5.0), fill_color=BG_CARD, border_color=ACCENT_BLUE)
 tf2 = add_text_box(slide, Inches(7.0), Inches(2.0), Inches(5.3), Inches(4.6))
 set_para(tf2, "CLOUD API & INFRASTRUCTURE COST", font_size=13, color=ACCENT_BLUE, bold=True)
-set_para(tf2, "• Lightweight Inference: Distilled diffusion model and optimized GraphSAGE keep GPU compute costs minimal ($0.002 per remediation).", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
-set_para(tf2, "• High ROI: Single prevented outage saves $50,000+ in SLA penalty fees and truck roll expenses.", font_size=11, color=TEXT_SECONDARY, is_first=False)
+set_para(tf2, "• Lightweight Inference: Distilled diffusion model and optimized GNN aim to keep GPU compute costs low (figure not yet benchmarked).", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
+set_para(tf2, "• ROI: Cost-benefit depends on prevented outages; no dollar savings figure is claimed without live data.", font_size=11, color=TEXT_SECONDARY, is_first=False)
 set_para(tf2, "• Production Feasibility: 5-layer architecture uses proven open-source components (Kafka, PyTorch, Flask, psutil).", font_size=11, color=TEXT_SECONDARY, is_first=False)
 
 # ====================================================================
@@ -476,10 +477,10 @@ set_para(tf, "Social & Environmental Considerations", font_size=28, color=WHITE,
 add_accent_line(slide, Inches(0.8), Inches(1.55), Inches(2.0), ACCENT_GREEN)
 
 impacts = [
-    ("Carbon Footprint Reduction", "40% fewer technician truck rolls directly reduces diesel fuel consumption and greenhouse gas emissions from service vehicles.", ACCENT_GREEN),
-    ("E-Waste Mitigation", "Software-based self-healing extends electronic hardware life cycles, delaying premature electronic disposal and e-waste generation.", ACCENT_CYAN),
-    ("Critical Infrastructure Reliability", "Sub-second MTTR ensures 99.999% SLA uptime for emergency services, 5G networks, cloud data centers, and enterprise IT.", ACCENT_BLUE),
-    ("Human Operator Well-being", "Transitions NOC engineers from stressful 24/7 manual alert firefighting to overseeing an autonomous self-healing system.", ACCENT_PURPLE),
+    ("Potential Carbon Footprint Reduction", "Potentially fewer technician truck rolls could reduce fuel use from service vehicles (not yet measured).", ACCENT_GREEN),
+    ("E-Waste Mitigation (potential)", "Software-based remediation could extend hardware life cycles, delaying premature e-waste generation.", ACCENT_CYAN),
+    ("Reliability Support (potential)", "Fast remediation recommendations could support higher SLA uptime; end-to-end MTTR is not yet claimed.", ACCENT_BLUE),
+    ("Human Operator Support", "Transitions NOC engineers from manual alert firefighting toward overseeing recommended remediations.", ACCENT_PURPLE),
 ]
 
 for i, (ititle, idesc, color) in enumerate(impacts):
@@ -569,10 +570,10 @@ add_accent_line(slide, Inches(0.8), Inches(1.55), Inches(2.0), ACCENT_GREEN)
 card1 = add_shape(slide, Inches(0.8), Inches(1.8), Inches(5.6), Inches(5.0), fill_color=BG_CARD, border_color=ACCENT_GREEN)
 tf1 = add_text_box(slide, Inches(1.0), Inches(2.0), Inches(5.2), Inches(4.6))
 set_para(tf1, "REVIEW 2 ACHIEVEMENTS", font_size=13, color=ACCENT_GREEN, bold=True)
-set_para(tf1, "✓ Fully Operational Prototype with sub-second MTTR (< 1ms execution time).", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
+set_para(tf1, "✓ Functional Prototype with fast in-process decision compute (< a few ms, excludes LLM/deployment).", font_size=11, color=TEXT_PRIMARY, is_first=False, space_before=Pt(6))
 set_para(tf1, "✓ 15 Production Files committed to public GitHub repository.", font_size=11, color=TEXT_SECONDARY, is_first=False)
-set_para(tf1, "✓ 100% Automated Test Suite Passing (5/5 unit & integration tests).", font_size=11, color=TEXT_SECONDARY, is_first=False)
-set_para(tf1, "✓ LLM-Powered Step-by-Step Remediation Engine operational via Groq API.", font_size=11, color=TEXT_SECONDARY, is_first=False)
+set_para(tf1, "✓ Automated Test Suite (5/5 unit & integration tests).", font_size=11, color=TEXT_SECONDARY, is_first=False)
+set_para(tf1, "✓ LLM-Powered Remediation Recommendation Engine via Groq API.", font_size=11, color=TEXT_SECONDARY, is_first=False)
 
 card2 = add_shape(slide, Inches(6.8), Inches(1.8), Inches(5.7), Inches(5.0), fill_color=BG_CARD, border_color=ACCENT_BLUE)
 tf2 = add_text_box(slide, Inches(7.0), Inches(2.0), Inches(5.3), Inches(4.6))
@@ -582,6 +583,6 @@ set_para(tf2, "2. Provisional Patent Application (PPA): Complete filing for 3 no
 set_para(tf2, "3. Live Enterprise Pilot: Graduate system autonomy from advisory to semi-autonomous execution.", font_size=11, color=TEXT_SECONDARY, is_first=False)
 
 # Save presentation
-output_path = r"d:\Predictive Maintenance Project 3\CTG-CPM_Review2_Presentation.pptx"
+output_path = os.environ.get("OUTPUT_PPT_PATH", r"d:\Predictive Maintenance Project 3\CTG-CPM_Review2_Presentation.pptx")
 prs.save(output_path)
 print(f"Presentation generated successfully: {output_path}")

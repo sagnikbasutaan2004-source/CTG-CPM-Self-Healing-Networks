@@ -32,12 +32,12 @@ In simple terms:
 - Human NOC (Network Operations Center) engineers then have to manually guess what is wrong and deploy fix scripts onto live network traffic. This is **slow**, **risky** (can cause cascading outages), and **expensive** (leads to unnecessary hardware replacements called "truck rolls").
 
 **CTG-CPM solves this completely**:
-1. It uses **Generative AI** to create **"What-If" future simulations** (Counterfactual Telemetry).
-2. It uses **Multi-Agent AI** to test fix strategies in a **Digital Twin Sandbox** before touching live systems.
-3. It uses **Algorithmic Game Theory** to mathematically ensure that agents cooperate efficiently without conflicts.
-4. It uses **LLM AI (Groq LPU)** to explain the problem and step-by-step solution in simple language for human operators.
+1. It uses **Generative AI** to create **"What-If" future projections** (Counterfactual Telemetry) that are clearly labelled as model/heuristic projections — **not** applied to or verified on live infrastructure.
+2. It uses **Multi-Agent AI** to evaluate fix strategies via projected scenarios before any live deployment decision.
+3. It uses **Algorithmic Game Theory** to coordinate agents' task allocation and conflict resolution.
+4. It uses **LLM AI (Groq LPU)** to explain the problem and suggested steps in simple language for human operators.
 
-Result: **Sub-second MTTR (< 10 seconds)**, **40% OPEX savings**, **0 cascading outages**, and **100% zero-risk remediation**.
+Result (honest scope): **Sub-millisecond in-process decision compute (excluding LLM round-trip and real device deployment)**, potential OPEX savings **if** fewer truck-rolls result (not claimed as measured), and **zero-risk remediation is NOT claimed** — no command is auto-deployed in the prototype.
 
 ---
 
@@ -76,11 +76,10 @@ The system works with two primary data environments:
   - `temperature_celsius`: Physical transceiver temp (Normal: ~52°C, Anomaly: > 75°C).
   - `packet_loss_percent`: Percentage of lost data packets (Normal: 0.01%, Anomaly: > 3.0%).
 
-### 3. Industrial Data Architecture (Production Setup)
-In a full enterprise telecommunication or cloud data center deployment:
-- **Streaming Telemetry Bus**: Apache Kafka / gNMI (gRPC Network Management Interface).
-- **Time-Series Database**: InfluxDB or Prometheus for metrics storage.
-- **Graph Database**: Neo4j for network topology graph storage.
+### 3. Streaming Transport (Real Kafka)
+- **Streaming Telemetry Bus**: A REAL Apache Kafka broker (default `localhost:9092`). Producers/consumers connect to the actual broker. If no broker is reachable, the system **reports `kafka_status: unavailable`** and does **not** silently substitute an emulator. An explicit, clearly-labelled local JSON debug file can optionally capture events offline (`offline_debug`), and is never reported as a broker.
+- **Time-Series Database (production)**: InfluxDB or Prometheus for metrics storage.
+- **Graph Database (production)**: Neo4j for network topology graph storage.
 
 ---
 
@@ -119,30 +118,34 @@ In a full enterprise telecommunication or cloud data center deployment:
 
 ---
 
-### Algorithm 1: GraphSAGE Graph Neural Network (GNN)
+### Algorithm 1: Graph Neural Network (GNN) — GCN & GraphSAGE
 - **Role**: Topology-Aware Anomaly Detection & Cascade Risk Prediction.
 - **Why this over standard CNNs/MLPs?**
   - Computer networks and data center servers are **graphs** (nodes connected by links), not 2D grids (images). Standard CNNs assume grid structures and fail on graph data.
-  - GraphSAGE samples neighboring node features and aggregates them into node embeddings.
+- **Two supported architectures (both PyTorch)**:
+  1. **GCN** (Graph Convolutional Network): symmetric-normalized adjacency aggregation `H' = σ(D^-1/2 A D^-1/2 H W)`. This is the architecture of the currently-shipped `gnn_model.pt` weights.
+  2. **GraphSAGE**: genuine neighborhood sampling/aggregation via learned aggregators (`h_v = σ(W·[h_v ‖ mean_{u∈N(v)} h_u])`).
+  - The report produced by `predict_cascade_risk` honestly identifies which architecture was used (`model_kind`), so a GCN is never mislabelled as GraphSAGE.
 - **How it works internally**:
   1. Each device in the network is a node $v$.
-  2. GraphSAGE gathers telemetry features from node $v$'s connected neighbors:
-     $$h_{N(v)}^k = \text{AGGREGATE}_k(\{h_u^{k-1}, \forall u \in N(v)\})$$
+  2. The GNN gathers telemetry features from node $v$'s connected neighbors.
   3. It combines neighbor information with node $v$'s own state to form an updated representation $h_v^k$.
-  4. If node $v$'s embedding strays beyond normal bounds, an anomaly is flagged, and GraphSAGE predicts which downstream connected nodes are at risk of cascading failure.
+  4. If node $v$'s embedding strays beyond normal bounds, an anomaly is flagged, and the GNN predicts which downstream connected nodes are at risk of cascading failure.
 
 ---
 
-### Algorithm 2: Time-Series Diffusion Model (Diffusion-TS)
-- **Role**: Counterfactual Telemetry Generation ("What-If" Future Simulator).
-- **Why this over GANs (Generative Adversarial Networks)?**
-  - GANs suffer from **mode collapse** (they get stuck generating only one type of output) and are notoriously unstable to train on continuous time-series metrics.
+### Algorithm 2: Time-Series Diffusion Model (Diffusion-TS) & Heuristic Fallback
+- **Role**: Counterfactual Telemetry **Projection** ("What-If" Future Simulator).
+- **Why diffusion over GANs?**
+  - GANs suffer from **mode collapse** and are unstable to train on continuous time-series metrics.
   - Diffusion models work via **denoising score matching**: they learn to reverse a gradual noise process, producing stable, high-fidelity synthetic time-series data.
 - **How it works internally**:
   1. **Forward Process (Adding Noise)**: Takes baseline telemetry $x_0$ and gradually adds Gaussian noise over $T$ steps until it becomes pure noise $x_T$.
   2. **Reverse Process (Denoising)**: The AI neural network learns to remove noise step-by-step:
      $$x_{t-1} = \frac{1}{\sqrt{\alpha_t}} \left( x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}} \epsilon_\theta(x_t, t) \right)$$
-  3. **Intervention Conditioning**: We condition the denoising process on candidate actions $c$ (e.g. *c = "Throttle CPU 15%"*). The model outputs a synthetic 20-step time-series showing exactly how temperature, OSNR, and load will behave into the future under action $c$.
+  3. **Intervention Conditioning**: The denoising process is conditioned on candidate actions $c$ (e.g. *c = "Throttle CPU 15%"*). The model outputs a synthetic 20-step time-series showing how temperature, OSNR, and load are **projected** to behave into the future under action $c$.
+- **Honest provenance**: When `diffusion_ts_model.pt` weights load successfully, the learned diffusion model is used as the primary generator and the scenario is tagged `generator: "diffusion"`. If weights are absent or inference fails, an explicitly-labelled heuristic state-space trajectory model is used and tagged `generator: "heuristic"`. **Every projected scenario is labelled a projection, not a live-verified outcome.** The Diffusion-TS model is trained on synthetic data that follows an exponential trajectory prior, so it reflects that prior — its `is_learned` flag must be interpreted accordingly.
+- **Honest health score**: the per-scenario health score is an informational diagnostic of the projected final state, **not** a claim that the fix was applied and verified on the live system.
 
 ---
 
@@ -218,7 +221,7 @@ In a full enterprise telecommunication or cloud data center deployment:
 ### Algorithm 7: LLM-Powered Diagnostics (Groq Engine)
 - **Role**: Converts complex telemetry, game theory math, and counterfactual scores into clear, human-understandable JSON diagnostics.
 - **LLM Used**: Groq Cloud API with `openai/gpt-oss-20b` model.
-- **Why Groq?** Groq's LPU (Language Processing Unit) architecture processes over 500 tokens per second, returning complete LLM analysis in **under 0.8 seconds** (maintaining the sub-second MTTR target).
+- **Why Groq?** Groq's LPU (Language Processing Unit) architecture can return LLM analysis quickly (typically under a second for small payloads). This latency applies to the LLM diagnostic step only, and is separate from (and additional to) the in-process decision-compute time. We do not claim a single sub-second end-to-end MTTR.
 - **Structured JSON Schema Output**:
   ```json
   {
@@ -232,9 +235,9 @@ In a full enterprise telecommunication or cloud data center deployment:
       {"step_number": 2, "action": "Apply CPU Throttling 85%", "detail": "...", "expected_impact": "..."},
       {"step_number": 3, "action": "Optimize Memory Cache", "detail": "...", "expected_impact": "..."}
     ],
-    "expected_outcome": "System health score improves from 24.5 to 83.0/100.",
-    "truck_roll_avoided": true,
-    "estimated_fix_time": "< 10 seconds"
+    "expected_outcome": "System health score is projected to improve from 24.5 to 83.0/100 (projection, not live-verified).",
+    "truck_roll_avoided": "potential (not measured)",
+    "estimated_fix_time": "Decision compute only (excludes deployment)"
   }
   ```
 
@@ -263,22 +266,22 @@ Here is what happens inside the system during a real incident:
 
 3. **Step 3: Simulation & Negotiation (~2s)**
    - VCG Auction assigns task roles to Agent 1 (Diagnostics), Agent 2 (Bargaining), Agent 3 (Execution).
-   - Agent 1 calculates Shapley Values: Laser degradation = $40\%$, Temp = $35\%$, OSNR = $15\%$, Packet Loss = $10\%$.
+    - Agent 1 computes Shapley attribution to weight each telemetry feature's contribution to the anomaly (values are computed per-run, not fixed).
    - Agent 2 solves Backward Induction SPE $\rightarrow$ selects `(Low Investment, Greedy, Accept)`.
    - Groq LLM generates structured problem summary and 3-step remediation instructions.
-   - Agent 3 tests the fix in the Digital Twin sandbox $\rightarrow$ confirms system stabilizes.
+    - Agent 3 selects the highest-projected candidate via the counterfactual projection stream and generates a recommended remediation command (NOT auto-deployed).
 
-4. **Step 4: Autonomous Deployment (~5s)**
-   - System generates NETCONF XML configuration script:
+4. **Step 4: Recommendation Generation (~compute under 10ms)**
+   - System generates a NETCONF XML configuration **recommendation**:
      ```xml
      <interface name='opt-transceiver-5g-01'>
        <laser-bias>current-adjusted</laser-bias>
        <traffic-policy>load-balance-30</traffic-policy>
      </interface>
      ```
-   - Script pushed to device via API.
+   - **In the prototype this is a recommendation only — it is NOT pushed to a device**; deployment is disabled unless a real transport is wired in (`deploy_commands=True`).
    - Status updated on Web Dashboard.
-   - **Total Elapsed Time: < 10 seconds. Zero truck roll required.**
+   - **Honest scope:** in-process decision compute is fast; end-to-end time including any real deployment is not claimed.
 
 ---
 
@@ -293,7 +296,7 @@ d:\Predictive Maintenance Project 3\
 ├── llm_diagnostician.py     # Groq LLM diagnosis & JSON parser
 ├── app.py                   # Flask web server REST APIs
 ├── main.py                  # CLI controller & demo runner
-├── test_prototype.py        # Automated test suite (5 tests, 100% pass)
+├── test_prototype.py        # Automated unit & integration test suite
 ├── templates/
 │   └── index.html           # Premium glassmorphism Web UI
 ├── .env.example             # API key config template
@@ -307,38 +310,38 @@ d:\Predictive Maintenance Project 3\
 ### Q1: Why did you use Counterfactual Telemetry instead of standard predictive ML?
 > **Answer**: Standard predictive ML only tells you *that* a failure will happen. It doesn't tell you *what will happen if you take action A vs action B*. Counterfactual telemetry generates hypothetical future time-series data under different candidate actions ("What-If" scenarios), enabling *prescriptive* self-healing before touching live infrastructure.
 
-### Q2: How does your system guarantee "Zero-Risk Remediation"?
-> **Answer**: Every candidate fix script is tested against the GenAI counterfactual telemetry stream inside a Digital Twin Sandbox first. Only if the simulation proves that the fix stabilizes system health score above the safety threshold is it approved for live deployment.
+### Q2: How does your system reduce risk before remediation?
+> **Answer**: Candidate fixes are evaluated against the GenAI counterfactual projection stream first, and the projected health score is used to *recommend* the safest option. However, in the current prototype **no command is auto-deployed** — the output is a recommendation, so we do **not** claim "zero-risk remediation" or that any fix was applied to a live device.
 
 ### Q3: Why is VCG Auction used for multi-agent task allocation?
-> **Answer**: VCG (Vickrey-Clarke-Groves) is a mathematically proven auction mechanism that guarantees Dominant-Strategy Incentive Compatibility (DSIC). This means agents are incentivized to bid their true capability scores without cheating, ensuring globally optimal task assignment.
+> **Answer**: VCG (Vickrey-Clarke-Groves) is a mathematically proven auction mechanism that guarantees Dominant-Strategy Incentive Compatibility (DSIC). This means agents are incentivized to report their true capability scores, allowing a welfare-maximising task assignment. (Note: this is a theoretical guarantee of the mechanism; the prototype's agent capability "bids" are derived from telemetry plus a fixed capability matrix.)
 
 ### Q4: Explain the Subgame Perfect Equilibrium (SPE) outcome in your game tree.
 > **Answer**: Using Backward Induction, Player 2 (System) prefers Accept at all final nodes. Player 1 (Remediation Agent) prefers Greedy proposals over Fair proposals. Backward induction shows that High Investment gives P2 a net payoff of $-1$, while Low Investment gives $0$. Since $0 > -1$, P2 chooses Low Investment, leading to the SPE equilibrium `(Low Investment, Greedy Proposal, Accept)` with final payoff $(13, 0)$.
 
-### Q5: How do Shapley Values help in Root Cause Analysis (RCA)?
-> **Answer**: Shapley values come from cooperative game theory. Instead of simple correlation, Shapley values evaluate the marginal contribution of a metric across all possible combinations of telemetry features. This gives an exact, axiomatically fair percentage weight (e.g. CPU 50%, Temp 30%) to each root cause feature.
+### Q5: How do Shapley Values help in Root-Cause **Attribution** (RCA)?
+> **Answer**: Shapley values come from cooperative game theory. Instead of simple correlation, Shapley values evaluate the marginal contribution of a metric across all possible combinations of telemetry features. This gives an axiomatic, fair weight (e.g. CPU 50%, Temp 30%) to each feature's contribution to the anomaly *score*. **Important caveat:** this is feature *attribution*, not validated *causal* root cause — we do not claim the top-attributed metric is definitely the physical cause without further validation.
 
-### Q6: Why did you use GraphSAGE GNN instead of standard CNNs?
-> **Answer**: Network topologies are non-Euclidean graphs (nodes connected by dynamic links). Standard CNNs require regular grid structures like images. GraphSAGE aggregates node neighbor embeddings to capture topological connectivity and cascading failure propagation.
+### Q6: Why did you use a GNN instead of standard CNNs?
+> **Answer**: Network topologies are non-Euclidean graphs (nodes connected by dynamic links). Standard CNNs require regular grid structures like images. Our GNN (GCN or GraphSAGE, reported honestly per run) aggregates node neighbor embeddings to capture topological connectivity and cascading failure propagation.
 
 ### Q7: Why use Diffusion Models for time-series generation instead of GANs?
 > **Answer**: GANs suffer from mode collapse and training instability on time-series metrics. Time-Series Diffusion (Diffusion-TS) uses denoising score matching, which is stable, avoids mode collapse, and allows precise conditioning on intervention variables.
 
 ### Q8: Why did you choose Groq API over running a local LLM?
-> **Answer**: Local LLMs (like Ollama on consumer hardware) take 5 to 15 seconds to generate text, breaking our < 10-second MTTR target. Groq's LPU hardware processes 500+ tokens/sec, completing full JSON diagnostic generation in under 0.8 seconds.
+> **Answer**: We chose a hosted LLM API (Groq) primarily for convenience and fast inference for the diagnostic step. Local LLMs can be slower and heavier to run on consumer hardware. We do **not** claim a sub-second end-to-end MTTR; Groq reduces the LLM diagnostic latency only, which is additive to the in-process decision compute.
 
 ### Q9: What happens if the Groq LLM API fails or goes offline?
-> **Answer**: The system has a built-in `_generate_fallback_diagnosis()` engine. If the LLM call fails, the system automatically falls back to rule-based Shapley and game theory analysis, ensuring 100% uptime without crashing.
+> **Answer**: The system has a built-in `_generate_fallback_diagnosis()` engine. If the LLM call fails, the system falls back to rule-based Shapley and game theory analysis rather than crashing.
 
-### Q10: How does CTG-CPM reduce OPEX by 40%?
-> **Answer**: By discovering software and configuration fixes (e.g., laser bias adjustment or CPU throttling) that extend equipment life by 6+ months, CTG-CPM eliminates unnecessary physical hardware replacements ("truck rolls"), which account for up to 40% of operational expenses in telecom and data centers.
+### Q10: How could CTG-CPM reduce OPEX / truck-rolls?
+> **Answer**: By recommending software and configuration fixes (e.g., laser bias adjustment or CPU throttling) that may extend equipment life and avoid unnecessary physical hardware replacements ("truck rolls"). **This is a stated potential benefit, not a measured outcome** — the prototype does not yet report measured OPEX savings or truck-roll avoidance rates.
 
 ### Q11: What is the difference between Live Host mode and 5G Network mode in your prototype?
-> **Answer**: Live Host mode ingests real-time CPU, RAM, Disk I/O, and process telemetry from the user's laptop using `psutil`. 5G Network mode simulates an optical backhaul transceiver experiencing OSNR degradation. Both feed into the exact same 5-layer self-healing pipeline.
+> **Answer**: Live Host mode ingests real-time CPU, RAM, Disk I/O, and process telemetry from the user's laptop using `psutil`. 5G Network mode simulates an optical backhaul transceiver experiencing OSNR degradation. Both feed into the same multi-layer recommendation pipeline.
 
 ### Q12: How fast does your multi-agent decision pipeline execute?
-> **Answer**: In our benchmark tests (`main.py` and `test_prototype.py`), the full multi-agent decision pipeline (VCG + Shapley + SPE + Nash + Digital Twin) executes in **under 0.5 milliseconds (0.0005 seconds)**.
+> **Answer**: In our benchmark tests (`main.py` and `test_prototype.py`), the **in-process compute** of the multi-agent decision pipeline (VCG + Shapley + SPE + Nash + projection) runs very fast. The 5G mode, which loads and runs the real PyTorch GraphSAGE GNN and diffusion models, measures roughly **150–200 ms** on this machine; the laptop heuristic path (which skips the neural models) is far faster (around a fraction of a millisecond). Because LLM round-trip and real device deployment are excluded, this is **compute latency only** — we do **not** claim sub-second end-to-end MTTR.
 
 ### Q13: What script formats are generated for execution?
 > **Answer**: For 5G telecom networks, it generates **NETCONF/YANG XML** configuration payloads. For host laptop systems, it generates **PowerShell commands** for process priority demotion and CPU frequency capping.
@@ -357,7 +360,7 @@ d:\Predictive Maintenance Project 3\
 | :--- | :--- | :--- | :--- |
 | **Sagnik Basu** | `23MID0042` | **33.3%** | • Overall System Architecture & 5-Layer Stack Design<br>• Game Theory Engine (`game_engine.py`: VCG, Shapley, SPE, Nash)<br>• Groq LLM Diagnostics Integration (`llm_diagnostician.py`) & JSON parsing<br>• GitHub Repo setup, Git security audit & automated unit testing (`test_prototype.py`) |
 | **C Sriharsha** | `23MID0111` | **33.3%** | • Telemetry Collection Engine (`telemetry_collector.py`)<br>• Real-time `psutil` host metric ingestion (CPU, RAM, Disk, Processes)<br>• 5G Optical Transceiver anomaly generator<br>• CLI Orchestrator (`main.py`) & sub-second pipeline timing benchmarks |
-| **Maitree Singh** | `23MID0076` | **33.3%** | • Generative Counterfactual Engine (`counterfactual_engine.py`) for "What-If" streams<br>• Multi-Agent Remediation Orchestrator (`agentic_remediator.py`) & Digital Twin Sandbox<br>• HMW-Style Modern Glassmorphism Web App UI (`templates/index.html`)<br>• Flask Server REST API endpoints (`app.py`) |
+| **Maitree Singh** | `23MID0076` | **33.3%** | • Generative Counterfactual Engine (`counterfactual_engine.py`) for "What-If" projections<br>• Multi-Agent Remediation Orchestrator (`agentic_remediator.py`) & projection-based recommendation<br>• HMW-Style Modern Glassmorphism Web App UI (`templates/index.html`)<br>• Flask Server REST API endpoints (`app.py`) |
 
 ---
 

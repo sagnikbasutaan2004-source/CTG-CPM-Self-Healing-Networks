@@ -1,7 +1,7 @@
 """
 app.py
-CTG-CPM: Self-Healing Networks via Counterfactual Telemetry
-Premium Flask Web Application with LLM-Powered Diagnostics
+CTG-CPM: Predictive Maintenance Recommendations via Counterfactual Telemetry
+Premium Flask Web Application with Dynamic Game Theory & LLM Diagnostics
 """
 
 from flask import Flask, jsonify, render_template, request
@@ -17,7 +17,6 @@ laptop_collector = LaptopTelemetryCollector()
 synthetic_generator = SyntheticTelemetryGenerator()
 cf_generator = CounterfactualGenerator()
 remediator = MultiAgentRemediator()
-game_tree = BargainingGameTree()
 
 anomaly_active = False
 last_diagnosis = None
@@ -32,10 +31,10 @@ def get_telemetry():
     if mode == "laptop":
         data = laptop_collector.get_live_metrics()
         if anomaly_active:
-            data["cpu_overall_percent"] = min(98.5, data["cpu_overall_percent"] + 65.0)
+            # Dynamic stress scaling factor based on live metrics
+            data["cpu_overall_percent"] = round(min(99.0, max(85.0, data["cpu_overall_percent"] * 2.2 + 35.0)), 1)
+            data["memory_percent"] = round(min(96.0, data["memory_percent"] * 1.35 + 15.0), 1)
             data["anomaly_flag"] = True
-        else:
-            data["anomaly_flag"] = data["cpu_overall_percent"] > 85.0
     else:
         data = synthetic_generator.generate_network_telemetry(inject_anomaly=anomaly_active)
     return jsonify(data)
@@ -56,8 +55,9 @@ def run_pipeline():
     if mode == "laptop":
         metrics = laptop_collector.get_live_metrics()
         if anomaly_active:
-            metrics["cpu_overall_percent"] = 96.4
-            metrics["memory_percent"] = min(95.0, metrics["memory_percent"] + 15.0)
+            # Dynamic live metric stress scaling
+            metrics["cpu_overall_percent"] = round(min(99.0, max(88.0, metrics["cpu_overall_percent"] * 2.4 + 40.0)), 1)
+            metrics["memory_percent"] = round(min(96.0, metrics["memory_percent"] * 1.35 + 15.0), 1)
             metrics["anomaly_flag"] = True
     else:
         metrics = synthetic_generator.generate_network_telemetry(inject_anomaly=True)
@@ -78,28 +78,30 @@ def run_pipeline():
             "severity": "High",
             "problem_title": "System Anomaly Detected",
             "problem_description": f"Anomaly detected in system telemetry. LLM analysis unavailable: {str(e)}",
-            "root_cause": "See Shapley attribution for root cause weights.",
+            "root_cause": "See Shapley attribution for contributing feature weights.",
             "risk_if_unresolved": "System may degrade further without intervention.",
             "remediation_steps": [
-                {"step_number": 1, "action": "Review Telemetry", "detail": "Check system metrics.", "expected_impact": "Identify root cause."}
+                {"step_number": 1, "action": "Review Telemetry", "detail": "Check system metrics.", "expected_impact": "Identify contributing factors."}
             ],
-            "expected_outcome": "System stabilization.",
+            "expected_outcome": "Projected system stabilization (not yet applied/verified).",
             "health_score_before": 30, "health_score_after": 83,
-            "estimated_fix_time": "< 10 seconds",
-            "truck_roll_avoided": True, "downtime_prevented": "Unknown",
-            "llm_powered": False
+            "estimated_fix_time": "Decision compute only; excludes deployment",
+            "truck_roll_avoided": "unknown", "downtime_prevented": "Unknown",
+            "llm_powered": False,
+            "confidence_note": "Fallback values are heuristic estimates, not measured outcomes."
         }
 
     result["llm_diagnosis"] = diagnosis
     last_diagnosis = diagnosis
     anomaly_active = False
-    
+
     # Serialize counterfactual scenario time series (reduce payload)
     simplified_cf = {}
     for name, data in result["counterfactual_scenarios"].items():
         simplified_cf[name] = {
-            "health_score": data["health_score"],
-            "is_stabilized": data["is_stabilized"],
+            "projected_health_score": data["projected_health_score"],
+            "projected_stabilized": data["projected_stabilized"],
+            "generator": data["generator"],
             "cost_score": data["cost_score"],
             "final_state": data["time_series_future"][-1] if data["time_series_future"] else {}
         }
@@ -109,6 +111,13 @@ def run_pipeline():
 
 @app.route("/api/game_tree", methods=["GET"])
 def get_game_tree():
+    mode = request.args.get("mode", "laptop")
+    if mode == "laptop":
+        metrics = laptop_collector.get_live_metrics()
+    else:
+        metrics = synthetic_generator.generate_network_telemetry(inject_anomaly=False)
+
+    game_tree = BargainingGameTree.from_telemetry(metrics)
     sol = game_tree.solve_backward_induction()
     return jsonify(sol)
 
