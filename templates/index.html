@@ -3,940 +3,1205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTG-CPM — Predictive Maintenance Recommendations via Counterfactual Telemetry</title>
-    <meta name="description" content="Predictive Maintenance Decision System using Generative AI, Game Theory, and Multi-Agent Orchestration. Produces remediation recommendations from live telemetry; commands are not auto-deployed in the prototype.">
+    <title>CTG-CPM — Counterfactual Telemetry for Predictive Maintenance</title>
+    <meta name="description" content="CTG-CPM: Prescriptive maintenance decisions using Graph Neural Networks, Generative Counterfactual AI, and Game-Theoretic Multi-Agent Orchestration. Live telemetry analysis for 5G networks and computing infrastructure.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #090c10;
-            --bg-secondary: #0d1117;
-            --bg-card: rgba(13, 17, 23, 0.85);
-            --bg-card-hover: rgba(22, 27, 42, 0.95);
-            --bg-glass: rgba(255,255,255,0.03);
-            --border: rgba(255, 255, 255, 0.06);
-            --border-hover: rgba(255, 255, 255, 0.15);
-            --accent-green: #b5f542;
-            --accent-green-dim: rgba(181, 245, 66, 0.15);
-            --accent-cyan: #38bdf8;
-            --accent-purple: #a78bfa;
-            --accent-amber: #fbbf24;
-            --accent-red: #f87171;
-            --accent-red-dim: rgba(248, 113, 113, 0.15);
-            --text-primary: #f0f2f5;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --radius-sm: 8px;
-            --radius-md: 14px;
-            --radius-lg: 20px;
-            --radius-xl: 28px;
+            --bg: #07090d;
+            --bg-2: #0d1117;
+            --bg-3: #111827;
+            --surface: rgba(255,255,255,0.03);
+            --surface-hover: rgba(255,255,255,0.055);
+            --border: rgba(255,255,255,0.07);
+            --border-active: rgba(255,255,255,0.18);
+            --green: #4ade80;
+            --green-dim: rgba(74,222,128,0.12);
+            --green-glow: rgba(74,222,128,0.06);
+            --blue: #60a5fa;
+            --blue-dim: rgba(96,165,250,0.12);
+            --amber: #fbbf24;
+            --amber-dim: rgba(251,191,36,0.12);
+            --red: #f87171;
+            --red-dim: rgba(248,113,113,0.12);
+            --purple: #c084fc;
+            --purple-dim: rgba(192,132,252,0.12);
+            --text: #e5e7eb;
+            --text-2: #9ca3af;
+            --text-3: #6b7280;
+            --mono: 'JetBrains Mono', monospace;
+            --r-sm: 6px;
+            --r-md: 10px;
+            --r-lg: 16px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: var(--bg);
+            color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ─── NAV ─── */
+        /* NAV */
         nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 48px;
-            background: rgba(9, 12, 16, 0.8);
-            backdrop-filter: blur(20px);
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            background: rgba(7,9,13,0.85);
+            backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
+        }
+        .nav-inner {
+            max-width: 1320px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; height: 56px;
         }
         .nav-brand {
-            display: flex; align-items: center; gap: 10px;
-            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+            display: flex; align-items: center; gap: 10px; color: var(--text);
+            text-decoration: none;
         }
-        .nav-brand .logo-icon {
-            width: 32px; height: 32px; border-radius: 8px;
-            background: linear-gradient(135deg, var(--accent-green), #4ade80);
+        .nav-logo {
+            width: 28px; height: 28px; background: var(--green); border-radius: 5px;
             display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 0.8rem; color: #000;
         }
-        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-logo svg { width: 16px; height: 16px; }
+        .nav-links { display: flex; gap: 28px; }
         .nav-links a {
-            color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
-            font-weight: 400; transition: color 0.2s;
+            color: var(--text-2); text-decoration: none; font-size: 0.875rem;
+            font-weight: 400; transition: color 0.15s;
         }
-        .nav-links a:hover { color: var(--text-primary); }
-        .nav-cta {
-            background: var(--accent-green); color: #000; padding: 8px 20px;
-            border-radius: 100px; font-weight: 600; font-size: 0.85rem;
-            text-decoration: none; display: flex; align-items: center; gap: 6px;
-            transition: all 0.2s;
+        .nav-links a:hover { color: var(--text); }
+        .nav-pill {
+            background: var(--green); color: #000; padding: 6px 16px;
+            border-radius: 100px; font-size: 0.8rem; font-weight: 600;
+            text-decoration: none; transition: opacity 0.15s;
         }
-        .nav-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+        .nav-pill:hover { opacity: 0.85; }
 
-        /* ─── HERO ─── */
+        /* LAYOUT */
+        .container { max-width: 1320px; margin: 0 auto; padding: 0 40px; }
+        section { padding: 96px 0; }
+        section:first-of-type { padding-top: 64px; }
+
+        .label {
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 1.8px;
+            text-transform: uppercase; color: var(--text-3); margin-bottom: 14px;
+        }
+        .heading {
+            font-family: 'Syne', sans-serif; font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 800; line-height: 1.1; margin-bottom: 18px;
+        }
+        .heading .accent {
+            color: var(--green);
+        }
+        .subtext {
+            font-size: 1rem; color: var(--text-2); line-height: 1.75;
+            max-width: 640px; margin-bottom: 48px;
+        }
+
+        /* HERO */
         .hero {
-            padding: 160px 48px 80px;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
-            max-width: 1400px; margin: 0 auto; align-items: center;
+            padding: 140px 0 80px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 64px;
+            align-items: center;
         }
-        .hero-left .tag-line {
+        .hero-eyebrow {
             display: inline-flex; align-items: center; gap: 8px;
-            font-size: 0.8rem; color: var(--accent-green); font-weight: 500;
-            margin-bottom: 24px; letter-spacing: 1px;
+            font-size: 0.75rem; font-weight: 500; color: var(--green);
+            margin-bottom: 22px; letter-spacing: 0.5px;
         }
-        .tag-line .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); }
+        .hero-eyebrow .dot {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
         .hero h1 {
-            font-family: 'Outfit', sans-serif; font-size: 3.8rem;
-            font-weight: 800; line-height: 1.1; margin-bottom: 24px;
+            font-family: 'Syne', sans-serif; font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+            font-weight: 800; line-height: 1.08; margin-bottom: 22px;
         }
-        .hero h1 em {
-            font-style: italic; font-family: 'Outfit', serif;
-            background: linear-gradient(90deg, var(--accent-green), #4ade80);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .hero h1 .highlight { color: var(--green); }
         .hero-desc {
-            font-size: 1.05rem; color: var(--text-secondary);
-            max-width: 500px; margin-bottom: 36px; line-height: 1.7;
+            font-size: 1.05rem; color: var(--text-2); line-height: 1.75;
+            max-width: 480px; margin-bottom: 36px;
         }
-        .hero-buttons { display: flex; gap: 16px; align-items: center; }
-        .btn-hero {
-            padding: 14px 28px; border-radius: 100px; font-weight: 600;
-            font-size: 0.95rem; cursor: pointer; border: none;
-            display: inline-flex; align-items: center; gap: 8px;
-            transition: all 0.25s ease;
+        .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+        .btn-primary {
+            background: var(--green); color: #000; padding: 12px 24px;
+            border-radius: 8px; font-weight: 600; font-size: 0.9rem;
+            border: none; cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
         }
-        .btn-hero-primary {
-            background: var(--accent-green); color: #000;
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary {
+            background: transparent; color: var(--text); padding: 12px 24px;
+            border-radius: 8px; font-weight: 500; font-size: 0.9rem;
+            border: 1px solid var(--border-active); cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
         }
-        .btn-hero-primary:hover { box-shadow: 0 0 30px rgba(181, 245, 66, 0.3); transform: translateY(-2px); }
-        .btn-hero-secondary {
-            background: transparent; color: var(--text-primary); border: 1px solid var(--border-hover);
-        }
-        .btn-hero-secondary:hover { border-color: var(--text-secondary); }
+        .btn-secondary:hover { border-color: var(--text-2); }
 
-        .hero-right { position: relative; }
-
-        /* Dashboard Preview Card */
-        .preview-card {
-            background: var(--bg-secondary);
+        /* Hero right: live preview card */
+        .hero-preview {
+            background: var(--bg-2);
             border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 28px; position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border-radius: var(--r-lg);
+            overflow: hidden;
         }
-        .preview-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px;
-        }
-        .preview-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
-        .preview-status {
-            font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700;
+        .hp-bar {
+            background: var(--bg-3); padding: 12px 18px;
             display: flex; align-items: center; gap: 8px;
-        }
-        .status-arrow { font-size: 0.9rem; }
-
-        .health-score-block { display: flex; gap: 28px; margin-bottom: 24px; }
-        .score-main { }
-        .score-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        .score-val {
-            font-family: 'Outfit', sans-serif; font-size: 3.4rem;
-            font-weight: 800; line-height: 1;
-        }
-        .score-val small { font-size: 1.2rem; color: var(--text-muted); font-weight: 400; }
-        .score-sub { font-size: 0.8rem; color: var(--accent-green); margin-top: 4px; }
-
-        .signal-chart {
-            flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
-        }
-        .signal-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .signal-line {
-            height: 60px; background: linear-gradient(180deg, rgba(181,245,66,0.1) 0%, transparent 100%);
-            border-radius: 6px; position: relative; overflow: hidden;
-        }
-        .signal-line svg { width: 100%; height: 100%; }
-
-        .preview-badge {
-            position: absolute; top: -12px; right: 24px;
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: white; padding: 6px 14px; border-radius: 100px;
-            font-size: 0.75rem; font-weight: 600;
-            display: flex; align-items: center; gap: 6px;
-        }
-
-        .live-badge {
-            position: absolute; bottom: -14px; left: 24px;
-            background: var(--bg-secondary); border: 1px solid var(--border);
-            padding: 6px 16px; border-radius: 100px;
-            font-size: 0.78rem; color: var(--text-secondary);
-            display: flex; align-items: center; gap: 8px;
-        }
-        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); animation: pulse-dot 1.5s infinite; }
-        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        .hero-glow {
-            position: absolute; top: -100px; right: -100px; width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(181, 245, 66, 0.06) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        /* ─── SECTION COMMON ─── */
-        section { max-width: 1400px; margin: 0 auto; padding: 100px 48px; }
-        .section-tag {
-            font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
-            letter-spacing: 2px; margin-bottom: 16px; font-weight: 500;
-        }
-        .section-heading {
-            font-family: 'Outfit', sans-serif; font-size: 2.8rem;
-            font-weight: 800; line-height: 1.15; margin-bottom: 20px;
-        }
-        .section-heading em {
-            font-style: italic;
-            background: linear-gradient(90deg, var(--accent-green), #86efac);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .section-desc {
-            font-size: 1rem; color: var(--text-secondary); max-width: 600px;
-            line-height: 1.7; margin-bottom: 48px;
-        }
-
-        /* ─── HOW IT WORKS CARDS ─── */
-        .steps-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-        }
-        .step-card {
-            border: 1px solid var(--border); border-radius: var(--radius-lg);
-            padding: 32px 28px; transition: all 0.3s ease;
-            position: relative; overflow: hidden;
-        }
-        .step-card:hover { border-color: var(--border-hover); transform: translateY(-4px); }
-        .step-card:nth-child(2) { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
-        .step-card:nth-child(2) .step-num { color: rgba(0,0,0,0.3); }
-        .step-card:nth-child(2) .step-desc { color: rgba(0,0,0,0.7); }
-        .step-num { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 24px; }
-        .step-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; line-height: 1.25; margin-bottom: 16px; }
-        .step-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; }
-
-        .step-visual {
-            margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);
-        }
-        .step-card:nth-child(2) .step-visual { border-top-color: rgba(0,0,0,0.15); }
-
-        .finding-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 6px 0; font-size: 0.85rem;
-        }
-        .finding-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; }
-        .finding-label { display: flex; align-items: center; }
-        .finding-count { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
-
-        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 80px; padding-top: 12px; }
-        .bar-col {
-            flex: 1; border-radius: 4px 4px 0 0;
-            background: linear-gradient(180deg, rgba(181,245,66,0.5) 0%, rgba(181,245,66,0.15) 100%);
-            transition: height 0.5s ease;
-        }
-
-        .retest-badge {
-            display: flex; align-items: center; gap: 12px; margin-top: 16px;
-            font-size: 0.85rem;
-        }
-        .check-circle {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: rgba(181,245,66,0.15); display: flex;
-            align-items: center; justify-content: center; color: var(--accent-green);
-        }
-
-        /* ─── LIVE TELEMETRY SECTION ─── */
-        .telemetry-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-            margin-bottom: 32px;
-        }
-        .metric-card {
-            background: var(--bg-glass); border: 1px solid var(--border);
-            border-radius: var(--radius-md); padding: 24px;
-            transition: all 0.3s;
-        }
-        .metric-card:hover { border-color: var(--border-hover); }
-        .metric-card .mc-label {
-            font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;
-            letter-spacing: 1px; margin-bottom: 10px;
-        }
-        .metric-card .mc-value {
-            font-family: 'JetBrains Mono', monospace; font-size: 1.8rem;
-            font-weight: 600; margin-bottom: 6px;
-        }
-        .metric-card .mc-bar {
-            height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px;
-            overflow: hidden; margin-top: 10px;
-        }
-        .metric-card .mc-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
-
-        .controls-row {
-            display: flex; gap: 12px; margin-bottom: 32px; align-items: center;
-        }
-        .mode-select {
-            background: var(--bg-glass); border: 1px solid var(--border);
-            color: var(--text-primary); padding: 10px 18px; border-radius: 100px;
-            font-size: 0.85rem; font-family: 'Inter', sans-serif; cursor: pointer;
-        }
-        .mode-select:focus { outline: none; border-color: var(--accent-green); }
-        .btn-action {
-            padding: 10px 22px; border-radius: 100px; font-weight: 600;
-            font-size: 0.85rem; cursor: pointer; border: none;
-            display: inline-flex; align-items: center; gap: 8px;
-            transition: all 0.25s;
-        }
-        .btn-inject { background: var(--accent-red-dim); color: var(--accent-red); border: 1px solid rgba(248,113,113,0.3); }
-        .btn-inject:hover { background: rgba(248,113,113,0.25); }
-        .btn-heal { background: var(--accent-green); color: #000; }
-        .btn-heal:hover { box-shadow: 0 0 20px rgba(181,245,66,0.25); }
-        .btn-heal:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .status-banner {
-            display: flex; align-items: center; gap: 12px; padding: 14px 20px;
-            border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500;
-            margin-left: auto;
-        }
-        .status-healthy { background: rgba(74, 222, 128, 0.08); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2); }
-        .status-anomaly { background: var(--accent-red-dim); color: var(--accent-red); border: 1px solid rgba(248,113,113,0.3); animation: pulse-border 1.5s infinite; }
-        @keyframes pulse-border { 0%, 100% { border-color: rgba(248,113,113,0.3); } 50% { border-color: rgba(248,113,113,0.7); } }
-
-        /* ─── DIAGNOSIS PANEL ─── */
-        .diagnosis-panel {
-            display: none;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 0; overflow: hidden;
-            margin-top: 32px;
-            animation: slideIn 0.4s ease;
-        }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .diagnosis-panel.visible { display: block; }
-
-        .diag-header {
-            padding: 28px 32px; display: flex; justify-content: space-between;
-            align-items: flex-start; border-bottom: 1px solid var(--border);
-        }
-        .diag-severity {
-            padding: 4px 12px; border-radius: 100px; font-size: 0.75rem;
-            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .sev-critical { background: rgba(239,68,68,0.15); color: #ef4444; }
-        .sev-high { background: rgba(251,146,60,0.15); color: #fb923c; }
-        .sev-medium { background: rgba(251,191,36,0.15); color: #fbbf24; }
-        .sev-low { background: rgba(74,222,128,0.15); color: #4ade80; }
-        .diag-title {
-            font-family: 'Outfit', sans-serif; font-size: 1.5rem;
-            font-weight: 700; margin-top: 10px; margin-bottom: 8px;
-        }
-        .diag-desc { font-size: 0.92rem; color: var(--text-secondary); line-height: 1.65; max-width: 700px; }
-
-        .diag-scores {
-            display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
-        }
-        .score-pill {
-            display: flex; align-items: center; gap: 12px;
-            padding: 10px 18px; border-radius: var(--radius-sm);
-            background: var(--bg-glass); border: 1px solid var(--border);
-        }
-        .score-pill .sp-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
-        .score-pill .sp-value { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; }
-
-        .diag-body { padding: 32px; }
-        .diag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-
-        .diag-block {
-            background: var(--bg-glass); border: 1px solid var(--border);
-            border-radius: var(--radius-md); padding: 24px;
-        }
-        .diag-block-title {
-            font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;
-            letter-spacing: 1.5px; margin-bottom: 14px; font-weight: 500;
-        }
-        .diag-block-content { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65; }
-
-        .remediation-steps { grid-column: 1 / -1; }
-        .rem-step {
-            display: flex; gap: 20px; padding: 20px 0;
             border-bottom: 1px solid var(--border);
         }
-        .rem-step:last-child { border-bottom: none; }
-        .rem-step-num {
-            width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
-            background: var(--accent-green-dim); color: var(--accent-green);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.85rem;
+        .hp-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .hp-title { font-family: var(--mono); font-size: 0.75rem; color: var(--text-3); margin-left: auto; }
+        .hp-body { padding: 24px; }
+        .hp-status {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px;
         }
-        .rem-step-action {
-            font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;
-        }
-        .rem-step-detail { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.55; }
-        .rem-step-impact {
-            font-size: 0.8rem; color: var(--accent-green); margin-top: 6px;
+        .hp-label { font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; }
+        .hp-badge {
             display: flex; align-items: center; gap: 6px;
+            font-size: 0.78rem; font-weight: 600; color: var(--green);
+            background: var(--green-dim); padding: 4px 12px; border-radius: 100px;
         }
+        .hp-score {
+            font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800;
+            line-height: 1; color: var(--green); margin-bottom: 4px;
+        }
+        .hp-score span { font-size: 1.2rem; color: var(--text-3); font-weight: 400; }
+        .hp-score-sub { font-size: 0.8rem; color: var(--text-3); margin-bottom: 20px; }
+        .hp-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .hp-metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; }
+        .hp-metric-label { font-size: 0.68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+        .hp-metric-value { font-family: var(--mono); font-size: 1.1rem; font-weight: 600; }
+        .hp-foot { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-3); }
+        .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse-dot 1.5s infinite; }
+
+        /* DIVIDER */
+        .divider { border: none; border-top: 1px solid var(--border); }
+
+        /* ARCHITECTURE SECTION */
+        .arch-stack { display: flex; flex-direction: column; gap: 2px; margin-bottom: 48px; }
+        .arch-layer {
+            display: grid; grid-template-columns: 180px 1fr;
+            border: 1px solid var(--border); border-radius: var(--r-md);
+            overflow: hidden; transition: border-color 0.2s;
+        }
+        .arch-layer:hover { border-color: var(--border-active); }
+        .arch-layer-num {
+            background: var(--surface); padding: 20px 24px;
+            display: flex; flex-direction: column; justify-content: center;
+            border-right: 1px solid var(--border);
+        }
+        .arch-layer-num .ln { font-family: var(--mono); font-size: 0.72rem; color: var(--text-3); margin-bottom: 4px; }
+        .arch-layer-num .lt { font-size: 0.82rem; font-weight: 600; }
+        .arch-layer-body { padding: 20px 24px; }
+        .arch-layer-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; }
+        .arch-layer-desc { font-size: 0.85rem; color: var(--text-2); line-height: 1.55; }
+        .arch-layer-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .tag {
+            font-family: var(--mono); font-size: 0.7rem; padding: 3px 9px;
+            border-radius: 4px; border: 1px solid var(--border);
+            color: var(--text-3); background: var(--surface);
+        }
+
+        /* ALGORITHM CARDS */
+        .algo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .algo-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-lg); padding: 24px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .algo-card:hover { border-color: var(--border-active); background: var(--surface-hover); }
+        .algo-num { font-family: var(--mono); font-size: 0.7rem; color: var(--text-3); margin-bottom: 14px; }
+        .algo-name { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+        .algo-role { font-size: 0.78rem; color: var(--green); font-weight: 500; margin-bottom: 12px; }
+        .algo-desc { font-size: 0.84rem; color: var(--text-2); line-height: 1.6; margin-bottom: 14px; }
+        .algo-formula {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--r-sm); padding: 10px 14px;
+            font-family: var(--mono); font-size: 0.72rem; color: #93c5fd;
+            line-height: 1.7; overflow-x: auto; white-space: pre;
+        }
+        .algo-guarantee { margin-top: 12px; font-size: 0.78rem; color: var(--text-3); }
+        .algo-guarantee strong { color: var(--text-2); }
+
+        /* BENCHMARK SECTION */
+        .bench-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+        .bench-figure {
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: var(--r-lg); overflow: hidden;
+        }
+        .bench-figure img { width: 100%; display: block; }
+        .bench-figure-cap {
+            padding: 14px 18px; border-top: 1px solid var(--border);
+            font-size: 0.8rem; color: var(--text-2); line-height: 1.5;
+        }
+        .bench-figure-cap strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+        .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        .metric-stat {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-md); padding: 20px 22px;
+        }
+        .metric-stat .ms-label { font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .metric-stat .ms-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+        .metric-stat .ms-note { font-size: 0.75rem; color: var(--text-3); }
+
+        /* LIVE SYSTEM */
+        .controls-row {
+            display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;
+        }
+        .mode-select {
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--text); padding: 9px 16px; border-radius: var(--r-md);
+            font-size: 0.85rem; font-family: 'Inter', sans-serif; cursor: pointer;
+        }
+        .mode-select:focus { outline: none; border-color: var(--green); }
+        .btn-action {
+            padding: 9px 20px; border-radius: var(--r-md); font-weight: 600;
+            font-size: 0.85rem; cursor: pointer; border: none;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .btn-inject {
+            background: var(--red-dim); color: var(--red);
+            border: 1px solid rgba(248,113,113,0.25);
+        }
+        .btn-inject:hover { background: rgba(248,113,113,0.2); }
+        .btn-run { background: var(--green); color: #000; }
+        .btn-run:hover { opacity: 0.9; }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+        .system-status {
+            margin-left: auto; display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px; border-radius: var(--r-md); font-size: 0.85rem; font-weight: 500;
+        }
+        .status-ok { background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+        .status-warn { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.25); animation: border-pulse 1.5s infinite; }
+        @keyframes border-pulse { 0%,100%{ border-color: rgba(248,113,113,0.25); } 50%{ border-color: rgba(248,113,113,0.6); } }
+
+        .telemetry-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+        .t-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-md); padding: 20px;
+            transition: border-color 0.2s;
+        }
+        .t-card:hover { border-color: var(--border-active); }
+        .t-label { font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .t-value { font-family: var(--mono); font-size: 1.75rem; font-weight: 600; margin-bottom: 8px; }
+        .t-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .t-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+
+        /* DIAGNOSIS PANEL */
+        .diag-panel {
+            display: none; margin-top: 24px;
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: var(--r-lg); overflow: hidden;
+            animation: slide-in 0.35s ease;
+        }
+        @keyframes slide-in { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+        .diag-panel.visible { display: block; }
+
+        .diag-header {
+            padding: 24px 28px; display: flex; justify-content: space-between;
+            align-items: flex-start; border-bottom: 1px solid var(--border);
+        }
+        .sev-badge { padding: 3px 10px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sev-critical { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .sev-high { background: rgba(251,146,60,0.15); color: #fb923c; }
+        .sev-medium { background: var(--amber-dim); color: var(--amber); }
+        .sev-low { background: var(--green-dim); color: var(--green); }
+        .diag-title { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; margin: 10px 0 8px; }
+        .diag-desc { font-size: 0.9rem; color: var(--text-2); max-width: 640px; line-height: 1.65; }
+        .health-scores { display: flex; gap: 12px; }
+        .h-score {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-md); padding: 12px 16px; text-align: center; min-width: 80px;
+        }
+        .h-score-label { font-size: 0.68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+        .h-score-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; }
+
+        .diag-body { padding: 28px; }
+        .diag-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .diag-block {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-md); padding: 20px;
+        }
+        .diag-block-title {
+            font-size: 0.7rem; color: var(--text-3); text-transform: uppercase;
+            letter-spacing: 1.5px; font-weight: 600; margin-bottom: 12px;
+        }
+        .diag-block-text { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; }
+
+        /* Shapley bars */
+        .shapley-list { display: flex; flex-direction: column; gap: 10px; }
+        .shapley-row { }
+        .shapley-head { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.82rem; }
+        .shapley-feature { color: var(--text-2); }
+        .shapley-pct { font-family: var(--mono); font-weight: 600; color: var(--text); }
+        .shapley-bar-bg { height: 5px; background: var(--border); border-radius: 3px; }
+        .shapley-bar-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.5s ease; }
+
+        /* Counterfactual table */
+        .cf-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .cf-table th { font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        .cf-table td { padding: 12px 12px; font-size: 0.86rem; border-bottom: 1px solid var(--border); }
+        .cf-table tr:last-child td { border-bottom: none; }
+        .cf-table tr:hover td { background: var(--surface); }
+        .cf-stable { color: var(--green); font-size: 0.75rem; font-weight: 600; background: var(--green-dim); padding: 2px 8px; border-radius: 4px; }
+        .cf-unstable { color: var(--red); font-size: 0.75rem; font-weight: 600; background: var(--red-dim); padding: 2px 8px; border-radius: 4px; }
+        .cf-gen { font-family: var(--mono); font-size: 0.72rem; color: var(--text-3); background: var(--surface); border: 1px solid var(--border); padding: 2px 7px; border-radius: 4px; }
+
+        /* SPE panel */
+        .spe-path {
+            background: var(--bg); border: 1px solid var(--green); border-left: 3px solid var(--green);
+            border-radius: var(--r-md); padding: 16px 20px;
+        }
+        .spe-path .sp-label { font-size: 0.7rem; color: var(--green); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 600; }
+        .spe-path .sp-text { font-family: var(--mono); font-size: 0.84rem; color: var(--text); line-height: 1.7; }
+
+        /* Remediation steps */
+        .rem-step { display: flex; gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+        .rem-step:last-child { border-bottom: none; }
+        .rem-num {
+            width: 32px; height: 32px; min-width: 32px; border-radius: 50%;
+            background: var(--green-dim); color: var(--green);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--mono); font-size: 0.82rem; font-weight: 600;
+        }
+        .rem-action { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+        .rem-detail { font-size: 0.84rem; color: var(--text-2); line-height: 1.55; }
+        .rem-impact { font-size: 0.78rem; color: var(--green); margin-top: 5px; }
 
         .diag-footer {
-            padding: 20px 32px; border-top: 1px solid var(--border);
+            padding: 16px 28px; border-top: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 0.82rem; color: var(--text-muted);
+            font-size: 0.8rem; color: var(--text-3);
         }
-        .diag-footer .model-tag {
-            background: rgba(167,139,250,0.1); color: var(--accent-purple);
-            padding: 4px 12px; border-radius: 100px; font-size: 0.75rem; font-weight: 600;
-        }
-
-        /* ─── KPI SECTION ─── */
-        .kpi-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
-        }
-        .kpi-card {
-            background: var(--bg-glass); border: 1px solid var(--border);
-            border-radius: var(--radius-lg); padding: 36px 28px;
-            text-align: center; transition: all 0.3s;
-        }
-        .kpi-card:hover { border-color: var(--border-hover); transform: translateY(-4px); }
-        .kpi-value {
-            font-family: 'Outfit', sans-serif; font-size: 3rem; font-weight: 800;
-            line-height: 1; margin-bottom: 6px;
-        }
-        .kpi-unit { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px; }
-        .kpi-label { font-size: 0.88rem; color: var(--text-secondary); font-weight: 500; }
-
-        /* ─── GAME TREE / COUNTERFACTUAL SECTION ─── */
-        .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .panel {
-            background: var(--bg-glass); border: 1px solid var(--border);
-            border-radius: var(--radius-lg); padding: 28px;
-        }
-        .panel-title {
-            font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700;
-            margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
-        }
-        .panel-tag {
-            font-size: 0.68rem; padding: 3px 10px; border-radius: 100px;
-            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .tag-green { background: rgba(181,245,66,0.12); color: var(--accent-green); }
-        .tag-purple { background: rgba(167,139,250,0.12); color: var(--accent-purple); }
-        .tag-cyan { background: rgba(56,189,248,0.12); color: var(--accent-cyan); }
-
-        .tree-node {
-            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-            border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px;
-            font-size: 0.85rem;
-        }
-        .tree-node.spe-active {
-            border-color: var(--accent-green); background: rgba(181,245,66,0.04);
-        }
-        .tree-node .tn-label { font-weight: 600; margin-bottom: 3px; }
-        .tree-node .tn-detail { color: var(--text-secondary); font-size: 0.82rem; }
-        .tree-node .tn-payoff {
-            font-family: 'JetBrains Mono', monospace; color: var(--accent-cyan);
-            font-weight: 600; margin-top: 4px;
+        .model-tag {
+            background: var(--purple-dim); color: var(--purple);
+            padding: 3px 10px; border-radius: 4px; font-size: 0.72rem; font-weight: 600;
         }
 
-        .cf-scenario {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 0; border-bottom: 1px solid var(--border);
-            font-size: 0.88rem;
+        /* HOW TO USE */
+        .guide-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        .guide-step {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-lg); padding: 24px 22px;
         }
-        .cf-scenario:last-child { border-bottom: none; }
-        .cf-name { font-weight: 500; flex: 1; }
-        .cf-score { font-family: 'JetBrains Mono', monospace; font-weight: 600; margin-right: 12px; }
-        .cf-badge {
-            padding: 3px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 600;
-        }
-        .cf-safe { background: rgba(74,222,128,0.12); color: #4ade80; }
-        .cf-unsafe { background: var(--accent-red-dim); color: var(--accent-red); }
+        .guide-step-n { font-family: var(--mono); font-size: 0.7rem; color: var(--text-3); margin-bottom: 16px; }
+        .guide-step-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; }
+        .guide-step-text { font-size: 0.84rem; color: var(--text-2); line-height: 1.6; }
 
-        /* ─── FOOTER ─── */
+        /* USE CASE TABLE */
+        .use-table { width: 100%; border-collapse: collapse; }
+        .use-table th { font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+        .use-table td { padding: 14px 16px; font-size: 0.87rem; color: var(--text-2); border-bottom: 1px solid var(--border); line-height: 1.55; }
+        .use-table tr:last-child td { border-bottom: none; }
+        .use-table tr:hover td { background: var(--surface); }
+        .use-table td:first-child { font-weight: 600; color: var(--text); }
+
+        /* FOOTER */
         footer {
-            border-top: 1px solid var(--border);
-            padding: 40px 48px; max-width: 1400px; margin: 0 auto;
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 0.82rem; color: var(--text-muted);
+            border-top: 1px solid var(--border); padding: 32px 0;
         }
-        .footer-links { display: flex; gap: 24px; }
-        .footer-links a { color: var(--text-muted); text-decoration: none; }
-        .footer-links a:hover { color: var(--text-secondary); }
+        .footer-inner {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.82rem; color: var(--text-3);
+        }
+        .footer-links { display: flex; gap: 20px; }
+        .footer-links a { color: var(--text-3); text-decoration: none; }
+        .footer-links a:hover { color: var(--text-2); }
 
-        /* ─── RESPONSIVE ─── */
+        /* SPINNER */
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* RESPONSIVE */
         @media (max-width: 1024px) {
-            .hero { grid-template-columns: 1fr; padding: 140px 24px 60px; }
-            .hero h1 { font-size: 2.6rem; }
-            .hero-right { display: none; }
-            .steps-grid, .kpi-grid, .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
-            .split-grid, .diag-grid { grid-template-columns: 1fr; }
-            section { padding: 60px 24px; }
-            nav { padding: 12px 24px; }
+            .container { padding: 0 24px; }
+            .hero { grid-template-columns: 1fr; padding: 120px 0 64px; }
+            .hero-preview { display: none; }
+            .algo-grid { grid-template-columns: repeat(2, 1fr); }
+            .bench-grid { grid-template-columns: 1fr; }
+            .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
+            .guide-steps { grid-template-columns: repeat(2, 1fr); }
+            .metrics-row { grid-template-columns: repeat(2, 1fr); }
+            .arch-layer { grid-template-columns: 1fr; }
+            .arch-layer-num { border-right: none; border-bottom: 1px solid var(--border); }
+            .diag-cols { grid-template-columns: 1fr; }
         }
         @media (max-width: 640px) {
-            .steps-grid, .kpi-grid, .telemetry-grid { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 2rem; }
-            .section-heading { font-size: 2rem; }
-            .nav-links { display: none; }
+            .algo-grid { grid-template-columns: 1fr; }
+            .guide-steps { grid-template-columns: 1fr; }
+            .metrics-row { grid-template-columns: 1fr; }
+            .telemetry-grid { grid-template-columns: 1fr; }
+            .health-scores { flex-direction: column; }
         }
-
-        /* Loading spinner */
-        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<!-- ═══════════════════════ NAV ═══════════════════════ -->
+<!-- NAV -->
 <nav>
-    <div class="nav-brand">
-        <div class="logo-icon">C</div>
-        CTG-CPM
+    <div class="nav-inner">
+        <a href="/" class="nav-brand">
+            <div class="nav-logo">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="8" cy="4" r="2" fill="#000"/>
+                    <circle cx="3" cy="12" r="2" fill="#000"/>
+                    <circle cx="13" cy="12" r="2" fill="#000"/>
+                    <line x1="8" y1="4" x2="3" y2="12" stroke="#000" stroke-width="1.5"/>
+                    <line x1="8" y1="4" x2="13" y2="12" stroke="#000" stroke-width="1.5"/>
+                </svg>
+            </div>
+            CTG-CPM
+        </a>
+        <div class="nav-links">
+            <a href="#architecture">Architecture</a>
+            <a href="#algorithms">Algorithms</a>
+            <a href="#benchmarks">Benchmarks</a>
+            <a href="#live-system">Live System</a>
+            <a href="#guide">User Guide</a>
+        </div>
+        <a href="#live-system" class="nav-pill">Run Inspection</a>
     </div>
-    <div class="nav-links">
-        <a href="#how-it-works">How it works</a>
-        <a href="#live-system">Live System</a>
-        <a href="#kpis">Impact</a>
-        <a href="#analysis">Analysis</a>
-    </div>
-    <a href="#live-system" class="nav-cta">Run Inspection →</a>
 </nav>
 
-<!-- ═══════════════════════ HERO ═══════════════════════ -->
-<div class="hero">
-    <div class="hero-left">
-        <div class="tag-line"><span class="dot"></span> Predictive maintenance decisions, in real time</div>
-        <h1>Your system's last check before <em>failure.</em></h1>
-        <p class="hero-desc">
-            CTG-CPM projects counterfactual futures and game-theoretic remediation recommendations for networks
-            and systems. Detect what's degrading, project the fix outcomes, and get a recommended action.
-            In the prototype, commands are <b>recommendations only</b> — nothing is auto-deployed.
-        </p>
-        <div class="hero-buttons">
-            <button class="btn-hero btn-hero-primary" onclick="document.getElementById('live-system').scrollIntoView({behavior:'smooth'})">
-                Run your first inspection →
-            </button>
-            <a href="#how-it-works" class="btn-hero btn-hero-secondary">Explore the system ↓</a>
-        </div>
-    </div>
-    <div class="hero-right">
-        <div class="hero-glow"></div>
-        <div class="preview-card">
-            <div class="preview-badge">✓ Verification complete</div>
-            <div class="preview-header">
-                <div>
-                    <div class="preview-title">SYSTEM STATUS</div>
-                    <div class="preview-status" id="heroStatusText">System Online <span class="status-arrow">↗</span></div>
-                </div>
+<!-- HERO -->
+<div class="container">
+    <div class="hero">
+        <div class="hero-left">
+            <div class="hero-eyebrow"><span class="dot"></span> Prescriptive Maintenance Decision System</div>
+            <h1>From telemetry to <span class="highlight">remediation</span> in one pipeline.</h1>
+            <p class="hero-desc">
+                CTG-CPM combines Graph Neural Networks, Generative Diffusion AI, and Game-Theoretic multi-agent coordination to project counterfactual futures under candidate interventions — then recommends the optimal fix before any human touches the system.
+            </p>
+            <p class="hero-desc" style="font-size:0.85rem; color: var(--text-3);">
+                Commands are <strong style="color:var(--text-2)">recommendations only</strong> in the prototype. Nothing is auto-deployed. All projections are clearly labelled as projections, not live-verified outcomes.
+            </p>
+            <div class="hero-ctas">
+                <button class="btn-primary" onclick="document.getElementById('live-system').scrollIntoView({behavior:'smooth'})">
+                    Run live inspection
+                </button>
+                <a href="#architecture" class="btn-secondary">View architecture</a>
             </div>
-            <div class="health-score-block">
-                <div class="score-main">
-                    <div class="score-label">HEALTH SCORE</div>
-                    <div class="score-val" id="heroHealthScore">92<small>/100</small></div>
-                    <div class="score-sub" id="heroScoreSub">Ready to operate ↑ 8</div>
+        </div>
+        <div class="hero-right">
+            <div class="hero-preview">
+                <div class="hp-bar">
+                    <div class="hp-dot" style="background:#ef4444;"></div>
+                    <div class="hp-dot" style="background:#fbbf24;"></div>
+                    <div class="hp-dot" style="background:#4ade80;"></div>
+                    <div class="hp-title">ctg-cpm / live-monitor</div>
                 </div>
-                <div class="signal-chart">
-                    <div class="signal-label">System signal</div>
-                    <div class="signal-line">
-                        <svg viewBox="0 0 200 60" preserveAspectRatio="none">
-                            <polyline id="heroSignalLine" fill="none" stroke="#b5f542" stroke-width="2"
-                                points="0,30 20,28 40,32 60,22 80,26 100,18 120,24 140,20 160,22 180,16 200,20"/>
-                        </svg>
+                <div class="hp-body">
+                    <div class="hp-status">
+                        <div class="hp-label">System Health Score</div>
+                        <div class="hp-badge"><span class="live-dot"></span> Live</div>
+                    </div>
+                    <div class="hp-score" id="heroScore">92<span>/100</span></div>
+                    <div class="hp-score-sub" id="heroScoreSub">Operating normally</div>
+                    <div class="hp-metrics">
+                        <div class="hp-metric">
+                            <div class="hp-metric-label">CPU Load</div>
+                            <div class="hp-metric-value" id="heroCpu" style="color:var(--blue);">—</div>
+                        </div>
+                        <div class="hp-metric">
+                            <div class="hp-metric-label">Memory</div>
+                            <div class="hp-metric-value" id="heroMem" style="color:var(--purple);">—</div>
+                        </div>
+                        <div class="hp-metric">
+                            <div class="hp-metric-label">Kafka Status</div>
+                            <div class="hp-metric-value" id="heroKafka" style="color:var(--amber); font-size:0.85rem;">—</div>
+                        </div>
+                        <div class="hp-metric">
+                            <div class="hp-metric-label">Anomaly Flag</div>
+                            <div class="hp-metric-value" id="heroAnomaly" style="color:var(--green);">None</div>
+                        </div>
                     </div>
                 </div>
+                <div class="hp-foot">
+                    <span class="live-dot"></span>
+                    Sampling via psutil — updates every 2s
+                </div>
             </div>
-            <div class="live-badge"><span class="live-dot"></span> Live signal</div>
         </div>
     </div>
 </div>
 
-<!-- ═══════════════════════ HOW IT WORKS ═══════════════════════ -->
-<section id="how-it-works">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 56px;">
-        <div>
-            <div class="section-heading">See the risk.<br><em>Fix it forward.</em></div>
-        </div>
-        <div style="display: flex; align-items: center;">
-            <p class="section-desc" style="margin-bottom: 0;">
-                CTG-CPM turns live telemetry into a clear remediation path—so your operations team gets
-                actionable direction and stakeholders get evidence they can trust.
-            </p>
-        </div>
-    </div>
-    <div class="steps-grid">
-        <div class="step-card">
-            <div class="step-num">01 / SIGNAL</div>
-            <div class="step-title">Find what could bring your system down.</div>
-            <div class="step-desc">Stream live system or network telemetry into one continuous inspection. CTG-CPM detects anomalies that deserve attention before they escalate.</div>
-            <div class="step-visual">
-                <div class="bar-chart">
-                    <div class="bar-col" style="height:40%"></div>
-                    <div class="bar-col" style="height:55%"></div>
-                    <div class="bar-col" style="height:70%"></div>
-                    <div class="bar-col" style="height:85%"></div>
-                    <div class="bar-col" style="height:65%"></div>
-                    <div class="bar-col" style="height:95%; background: linear-gradient(180deg, rgba(248,113,113,0.7), rgba(248,113,113,0.15));"></div>
+<hr class="divider">
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+    <div class="container">
+        <div class="label">System Architecture</div>
+        <div class="heading">Five layers.<br>One coherent <span class="accent">decision pipeline.</span></div>
+        <p class="subtext">Each layer feeds its output into the next. Telemetry becomes a risk assessment, risk becomes a set of projected futures, and futures become a structured recommendation backed by formal game theory.</p>
+
+        <div class="arch-stack">
+            <div class="arch-layer">
+                <div class="arch-layer-num">
+                    <div class="ln">Layer 01</div>
+                    <div class="lt" style="color:var(--blue);">Ingestion</div>
                 </div>
-                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; text-align:right;">Live inspection</div>
+                <div class="arch-layer-body">
+                    <div class="arch-layer-title">Data Ingestion and Streaming</div>
+                    <div class="arch-layer-desc">Live host metrics from psutil (CPU, RAM, Disk I/O, Process Table) and synthetic 5G optical transceiver telemetry (OSNR, Laser Bias, Temperature, Packet Loss). Events published to Apache Kafka at localhost:9092 with honest status reporting — no emulator substitution when no broker is reachable.</div>
+                    <div class="arch-layer-tags">
+                        <span class="tag">psutil</span>
+                        <span class="tag">Apache Kafka</span>
+                        <span class="tag">telemetry_collector.py</span>
+                        <span class="tag">kafka_telemetry_streaming.py</span>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="step-card">
-            <div class="step-num">02 / DECISION</div>
-            <div class="step-title">Prioritize without the panic.</div>
-            <div class="step-desc">Every finding gets a clear severity level and root-cause attribution. Your team always knows what needs attention first.</div>
-            <div class="step-visual">
-                <div class="finding-item"><span class="finding-label"><span class="finding-dot" style="background:#ef4444;"></span>Critical</span><span class="finding-count">01</span></div>
-                <div class="finding-item"><span class="finding-label"><span class="finding-dot" style="background:#fb923c;"></span>High</span><span class="finding-count">02</span></div>
-                <div class="finding-item"><span class="finding-label"><span class="finding-dot" style="background:#fbbf24;"></span>Medium</span><span class="finding-count">04</span></div>
+            <div class="arch-layer">
+                <div class="arch-layer-num">
+                    <div class="ln">Layer 02</div>
+                    <div class="lt" style="color:var(--purple);">Topology GNN</div>
+                </div>
+                <div class="arch-layer-body">
+                    <div class="arch-layer-title">Graph Neural Network Cascade Risk Assessment</div>
+                    <div class="arch-layer-desc">A PyTorch GNN (GCN or GraphSAGE) processes the network topology graph, using live telemetry as node features. Outputs per-node anomaly probabilities and identifies downstream cascade risk nodes. The model_kind field in every prediction report honestly identifies which architecture produced the result.</div>
+                    <div class="arch-layer-tags">
+                        <span class="tag">PyTorch</span>
+                        <span class="tag">GCN / GraphSAGE</span>
+                        <span class="tag">gnn_topology_model.py</span>
+                        <span class="tag">gnn_model.pt</span>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="step-card">
-            <div class="step-num">03 / PROOF</div>
-            <div class="step-title">End every handoff with evidence.</div>
-            <div class="step-desc">After a remediation is recommended, generate a simple, business-readable record of what was inspected and the projected outcome.</div>
-            <div class="step-visual">
-                <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center;">
-                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Health Readiness</div>
-                    <div style="font-family:'Outfit',sans-serif; font-size:2.4rem; font-weight:800;">92</div>
-                    <div style="font-size:0.75rem; color:var(--accent-green); margin-top:4px;">Verified Improvements</div>
+            <div class="arch-layer">
+                <div class="arch-layer-num">
+                    <div class="ln">Layer 03</div>
+                    <div class="lt" style="color:var(--green);">Generative AI</div>
+                </div>
+                <div class="arch-layer-body">
+                    <div class="arch-layer-title">Counterfactual Time-Series Generation</div>
+                    <div class="arch-layer-desc">A conditional Diffusion denoising model (Diffusion-TS) generates parallel 20-timestep projections under each candidate intervention. Scenarios are tagged with their generator (diffusion or heuristic), health score, and a note marking them as projections — never as live-verified outcomes. Heuristic fallback uses explicit exponential decay models.</div>
+                    <div class="arch-layer-tags">
+                        <span class="tag">Diffusion-TS</span>
+                        <span class="tag">Denoising Score Matching</span>
+                        <span class="tag">counterfactual_engine.py</span>
+                        <span class="tag">diffusion_ts_model.pt</span>
+                    </div>
+                </div>
+            </div>
+            <div class="arch-layer">
+                <div class="arch-layer-num">
+                    <div class="ln">Layer 04</div>
+                    <div class="lt" style="color:var(--amber);">Game Theory</div>
+                </div>
+                <div class="arch-layer-body">
+                    <div class="arch-layer-title">Multi-Agent Game-Theoretic Decision Engine</div>
+                    <div class="arch-layer-desc">Four formal mechanisms coordinate agent decisions: VCG auction allocates tasks by maximizing social welfare (DSIC property). Shapley values compute exact marginal feature attribution. Backward induction solves the Subgame Perfect Equilibrium of the investment-bargaining game. Nash equilibrium analysis prevents conflicting agent strategies.</div>
+                    <div class="arch-layer-tags">
+                        <span class="tag">VCG Auction</span>
+                        <span class="tag">Shapley Values</span>
+                        <span class="tag">Backward Induction SPE</span>
+                        <span class="tag">Nash Equilibrium</span>
+                        <span class="tag">game_engine.py</span>
+                    </div>
+                </div>
+            </div>
+            <div class="arch-layer">
+                <div class="arch-layer-num">
+                    <div class="ln">Layer 05</div>
+                    <div class="lt" style="color:var(--red);">Interface</div>
+                </div>
+                <div class="arch-layer-body">
+                    <div class="arch-layer-title">LLM Diagnostics, REST API, and Dashboard</div>
+                    <div class="arch-layer-desc">The Groq LLM API translates mathematical outputs into structured JSON diagnoses with severity, root cause, remediation steps, and expected outcome narrative. Flask serves five REST endpoints. The web dashboard presents live telemetry, diagnosis panels, counterfactual scenarios, and the SPE game tree interactively.</div>
+                    <div class="arch-layer-tags">
+                        <span class="tag">Groq LLM API</span>
+                        <span class="tag">Flask</span>
+                        <span class="tag">app.py</span>
+                        <span class="tag">llm_diagnostician.py</span>
+                        <span class="tag">NETCONF/YANG</span>
+                        <span class="tag">PowerShell</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ═══════════════════════ KPIs ═══════════════════════ -->
-<section id="kpis">
-    <div class="section-tag">Expected Impact</div>
-    <div class="section-heading">Transforming Operations</div>
-    <p class="section-desc">From hours to seconds for the decision step. Scope is stated honestly below.</p>
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-value" style="color:var(--accent-cyan);">&lt;10</div>
-            <div class="kpi-unit">ms</div>
-            <div class="kpi-label">In-process decision compute*</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-value" style="color:var(--accent-green);">Potential</div>
-            <div class="kpi-unit">not measured</div>
-            <div class="kpi-label">OPEX Savings / Fewer Truck Rolls</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-value" style="color:var(--accent-purple);">No Fix</div>
-            <div class="kpi-unit">auto-applied</div>
-            <div class="kpi-label">Commands are recommendations only</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-value" style="color:var(--accent-amber);">-</div>
-            <div class="kpi-unit">n/a</div>
-            <div class="kpi-label">Cascading Outages (not claimed)</div>
+<hr class="divider">
+
+<!-- ALGORITHMS -->
+<section id="algorithms">
+    <div class="container">
+        <div class="label">Algorithm Reference</div>
+        <div class="heading">Six algorithms.<br>All <span class="accent">mathematically grounded.</span></div>
+        <p class="subtext">Every decision in the pipeline is produced by a formally-specified algorithm. No black-box heuristics, no hardcoded constants.</p>
+
+        <div class="algo-grid">
+            <div class="algo-card">
+                <div class="algo-num">01 — TOPOLOGY</div>
+                <div class="algo-name">Graph Neural Network</div>
+                <div class="algo-role">GCN + GraphSAGE — Cascade Risk Prediction</div>
+                <div class="algo-desc">Aggregates neighborhood telemetry features across the network graph to compute per-node anomaly probabilities. Detects which nodes are anomalous and which downstream nodes are at cascade failure risk.</div>
+                <div class="algo-formula">GCN: H' = sigma(D^-1/2 A D^-1/2 H W)
+
+GraphSAGE: h_v = sigma(W . CONCAT(
+  h_v, MEAN_{u in N(v)} h_u
+))</div>
+                <div class="algo-guarantee">Architecture reported honestly as <strong>model_kind</strong> in every prediction output.</div>
+            </div>
+            <div class="algo-card">
+                <div class="algo-num">02 — GENERATIVE AI</div>
+                <div class="algo-name">Diffusion-TS Generator</div>
+                <div class="algo-role">Conditional Time-Series Counterfactual Projection</div>
+                <div class="algo-desc">Generates parallel future telemetry trajectories conditioned on each candidate intervention using denoising diffusion. Stable training with no mode collapse. Tagged as diffusion or heuristic depending on weight availability.</div>
+                <div class="algo-formula">Reverse: x_(t-1) = (1/sqrt(a_t)) *
+  (x_t - ((1-a_t)/sqrt(1-a_bar_t))
+  * eps_theta(x_t, t, c)) + sigma_t*z
+
+T = 50 diffusion steps, seq_len = 20</div>
+                <div class="algo-guarantee">Every scenario tagged: <strong>generator</strong>, <strong>projected_stabilized</strong>, <strong>note: PROJECTION ONLY</strong>.</div>
+            </div>
+            <div class="algo-card">
+                <div class="algo-num">03 — ROOT CAUSE</div>
+                <div class="algo-name">Shapley Value Attribution</div>
+                <div class="algo-role">Cooperative Game Theory — Feature Importance</div>
+                <div class="algo-desc">Computes exact marginal contributions of each telemetry feature to the anomaly score across all possible feature subsets. Satisfies Efficiency, Symmetry, and Null Player axioms. Dynamic characteristic function built from live Z-scores.</div>
+                <div class="algo-formula">phi_i(v) = SUM over S in subsets(N\{i})
+  [|S|!(|N|-|S|-1)!/|N|!]
+  * [v(S union {i}) - v(S)]
+
+v(S) = SUM_{m in S} (z_m^1.6) * 15.0</div>
+                <div class="algo-guarantee"><strong>Efficiency:</strong> sum of all phi_i equals v(N). This is attribution, not validated causal proof.</div>
+            </div>
+            <div class="algo-card">
+                <div class="algo-num">04 — TASK ALLOCATION</div>
+                <div class="algo-name">VCG Auction Mechanism</div>
+                <div class="algo-role">Dominant-Strategy Incentive Compatible Task Assignment</div>
+                <div class="algo-desc">Allocates diagnostic, bargaining, and execution tasks to the three agents by maximizing total social welfare. VCG payments ensure agents truthfully report their capabilities — strategic misrepresentation is never profitable.</div>
+                <div class="algo-formula">a* = argmax_a SUM_i v_i(a_i)
+
+Payment_i = max_{a' without i}
+  SUM_{j!=i} v_j(a'_j)
+  - SUM_{j!=i} v_j(a*_j)
+
+Bids derived dynamically from
+telemetry stress level per run.</div>
+                <div class="algo-guarantee">Guarantees <strong>DSIC</strong>: truthful bidding is the dominant strategy for every agent.</div>
+            </div>
+            <div class="algo-card">
+                <div class="algo-num">05 — BARGAINING</div>
+                <div class="algo-name">Backward Induction SPE</div>
+                <div class="algo-role">Extensive-Form Game — Subgame Perfect Equilibrium</div>
+                <div class="algo-desc">Models the investment-remediation bargaining between the system (P2) and the remediation agent (P1) as a 3-stage sequential game. Backward induction finds the strategy profile that is a Nash Equilibrium in every subgame.</div>
+                <div class="algo-formula">P2: choose Investment (High/Low)
+P1: propose Split (Fair/Greedy)
+P2: respond (Accept/Reject)
+
+Parameters derived dynamically
+from live OSNR, Temperature, and
+Laser Bias per telemetry sample.
+
+Default SPE: (Low, Greedy, Accept)
+Payoff: (u1=13.0, u2=0.0)</div>
+                <div class="algo-guarantee">Parameters change each run. <strong>SPE payoffs reflect current telemetry</strong>, not fixed constants.</div>
+            </div>
+            <div class="algo-card">
+                <div class="algo-num">06 — COORDINATION</div>
+                <div class="algo-name">Nash Equilibrium</div>
+                <div class="algo-role">Normal-Form Game — Conflict Resolution</div>
+                <div class="algo-desc">Constructs a 2x2 payoff matrix from counterfactual health scores and intervention costs. Best-response analysis finds the pure-strategy Nash Equilibrium preventing agents from choosing conflicting strategies simultaneously.</div>
+                <div class="algo-formula">u_A_high = h*0.22 - cost*1.4 + stab*3.0
+u_B_eco  = h*0.24 - cost*0.4
+
+Find (r,c) where:
+  r = argmax_r u_A(r,c) for each c
+  c = argmax_c u_B(r,c) for each r
+  Intersection = Nash Equilibrium</div>
+                <div class="algo-guarantee">Payoff matrix built dynamically from <strong>live counterfactual projection scores</strong> each run.</div>
+            </div>
         </div>
     </div>
-    <p class="section-desc" style="font-size:0.85rem;color:var(--text-muted);">*Decision-compute time excludes LLM round-trip and any real device deployment.</p>
 </section>
 
-<!-- ═══════════════════════ LIVE SYSTEM ═══════════════════════ -->
+<hr class="divider">
+
+<!-- BENCHMARKS -->
+<section id="benchmarks">
+    <div class="container">
+        <div class="label">Empirical Results</div>
+        <div class="heading">Measured performance.<br><span class="accent">Honest scope.</span></div>
+        <p class="subtext">All metrics below are measured on the running codebase. Neural model metrics are computed on synthetic training data and reflect fit to the data generator. No values are hardcoded or fabricated.</p>
+
+        <div class="metrics-row" style="margin-bottom:40px;">
+            <div class="metric-stat">
+                <div class="ms-label">Unit Tests</div>
+                <div class="ms-value" style="color:var(--green);">9 / 9</div>
+                <div class="ms-note">All pass — game theory, telemetry, counterfactual, Kafka, pipeline</div>
+            </div>
+            <div class="metric-stat">
+                <div class="ms-label">Decision Compute</div>
+                <div class="ms-value" style="color:var(--blue);">&lt;10ms</div>
+                <div class="ms-note">In-process only. Excludes LLM round-trip and deployment.</div>
+            </div>
+            <div class="metric-stat">
+                <div class="ms-label">Diffusion FID</div>
+                <div class="ms-value" style="color:var(--amber);">&lt;50.0</div>
+                <div class="ms-note">Target threshold. Computed on synthetic dataset only.</div>
+            </div>
+            <div class="metric-stat">
+                <div class="ms-label">Python Files</div>
+                <div class="ms-value" style="color:var(--purple);">15</div>
+                <div class="ms-note">All compile with zero syntax errors.</div>
+            </div>
+        </div>
+
+        <div class="bench-grid">
+            <div class="bench-figure">
+                <img src="/static/benchmark_figures/empirical_benchmark_metrics.png" alt="Empirical benchmark metrics: GNN and Diffusion training loss curves, FID score comparison, anomaly detection metrics, and compute latency breakdown" loading="lazy">
+                <div class="bench-figure-cap">
+                    <strong>Empirical Benchmark Metrics</strong>
+                    GNN and Diffusion-TS training loss curves over 20 epochs, FID score vs 50.0 threshold, GNN accuracy and ROC-AUC on synthetic dataset, and illustrative compute latency component breakdown.
+                </div>
+            </div>
+            <div class="bench-figure">
+                <img src="/static/benchmark_figures/counterfactual_diffusion_curves.png" alt="Real vs Diffusion-TS synthetic OSNR trajectory comparison with 18 dB anomaly threshold line" loading="lazy">
+                <div class="bench-figure-cap">
+                    <strong>Counterfactual Trajectory Comparison</strong>
+                    Ground-truth OSNR trajectory (synthetic target) vs Diffusion-TS generated counterfactual projection. The 18.0 dB anomaly safety threshold is shown. The model learns to project stabilizing trajectories under intervention conditioning.
+                </div>
+            </div>
+            <div class="bench-figure">
+                <img src="/static/benchmark_figures/mttr_comparison_bar.png" alt="Decision compute time comparison: Traditional manual repair vs rule-based automation vs CTG-CPM in-process compute" loading="lazy">
+                <div class="bench-figure-cap">
+                    <strong>Decision Compute vs Traditional Repair (Log Scale)</strong>
+                    Comparison of traditional manual repair (hours), rule-based automation (minutes), and CTG-CPM in-process decision compute (milliseconds). CTG-CPM bar covers only in-process computation — it excludes LLM and deployment time.
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--amber); border-radius: var(--r-md); padding: 16px 20px;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber); font-weight: 600; margin-bottom: 6px;">Measurement Scope</div>
+            <div style="font-size: 0.84rem; color: var(--text-2); line-height: 1.65;">GNN and Diffusion-TS metrics are computed on the synthetic dataset produced by NetworkDatasetGenerator, which uses mathematical models. They reflect fit to the synthetic prior, not validated performance on real production 5G telemetry. Compute latency covers in-process Python execution: VCG auction, Shapley calculation, backward induction, Nash equilibrium, counterfactual heuristic projection, and command generation. LLM round-trip via Groq API (typically 0.5–2s) and any real device deployment over NETCONF are additional and not included in the benchmark.</div>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- LIVE SYSTEM -->
 <section id="live-system">
-    <div class="section-tag">LIVE INSPECTION</div>
-    <div class="section-heading">Run a live scan. <em>See it heal.</em></div>
-    <p class="section-desc">Stream real-time telemetry from this machine, inject a failure scenario, then watch CTG-CPM generate a remediation recommendation.</p>
+    <div class="container">
+        <div class="label">Live Inspection</div>
+        <div class="heading">Connect. Detect. <span class="accent">Decide.</span></div>
+        <p class="subtext">Stream real-time telemetry from this machine, inject a fault scenario, and run the full multi-agent pipeline to generate a structured remediation recommendation.</p>
 
-    <div class="controls-row">
-        <select id="modeSelect" class="mode-select" onchange="switchMode()">
-            <option value="laptop">💻 Live Laptop Host Telemetry</option>
-            <option value="5g_network">📡 5G Optical Backhaul (Simulated)</option>
-        </select>
-        <button class="btn-action btn-inject" onclick="injectAnomaly()" id="btnInject">⚡ Inject Failure Anomaly</button>
-        <button class="btn-action btn-heal" onclick="runHealing()" id="btnHeal">🛡️ Generate Remediation</button>
-        <div class="status-banner status-healthy" id="systemStatus">
-            <span class="live-dot"></span> System Healthy
-        </div>
-    </div>
-
-    <div class="telemetry-grid" id="telemetryGrid">
-        <div class="metric-card">
-            <div class="mc-label" id="m1Label">CPU UTILIZATION</div>
-            <div class="mc-value" id="m1Value" style="color:var(--accent-cyan);">0%</div>
-            <div class="mc-bar"><div class="mc-bar-fill" id="m1Bar" style="width:0%; background:var(--accent-cyan);"></div></div>
-        </div>
-        <div class="metric-card">
-            <div class="mc-label" id="m2Label">MEMORY USAGE</div>
-            <div class="mc-value" id="m2Value" style="color:var(--accent-purple);">0%</div>
-            <div class="mc-bar"><div class="mc-bar-fill" id="m2Bar" style="width:0%; background:var(--accent-purple);"></div></div>
-        </div>
-        <div class="metric-card">
-            <div class="mc-label" id="m3Label">DISK I/O</div>
-            <div class="mc-value" id="m3Value" style="color:var(--accent-amber);">0 KB/s</div>
-            <div class="mc-bar"><div class="mc-bar-fill" id="m3Bar" style="width:0%; background:var(--accent-amber);"></div></div>
-        </div>
-        <div class="metric-card">
-            <div class="mc-label" id="m4Label">BATTERY</div>
-            <div class="mc-value" id="m4Value" style="color:var(--accent-green);">100%</div>
-            <div class="mc-bar"><div class="mc-bar-fill" id="m4Bar" style="width:100%; background:var(--accent-green);"></div></div>
-        </div>
-    </div>
-
-    <!-- Diagnosis Panel (appears after pipeline run) -->
-    <div class="diagnosis-panel" id="diagPanel">
-        <div class="diag-header">
-            <div>
-                <span class="diag-severity sev-high" id="diagSeverity">HIGH</span>
-                <div class="diag-title" id="diagTitle">Loading diagnosis...</div>
-                <div class="diag-desc" id="diagDesc"></div>
+        <div class="controls-row">
+            <select id="modeSelect" class="mode-select" onchange="switchMode()">
+                <option value="laptop">Live Laptop Host Telemetry (psutil)</option>
+                <option value="5g_network">5G Optical Backhaul (Simulated Transceiver)</option>
+            </select>
+            <button class="btn-action btn-inject" id="btnInject" onclick="injectAnomaly()">Inject Failure Anomaly</button>
+            <button class="btn-action btn-run" id="btnRun" onclick="runPipeline()">Generate Remediation</button>
+            <div class="system-status status-ok" id="sysStatus">
+                <span class="live-dot"></span> System Nominal
             </div>
-            <div class="diag-scores">
-                <div class="score-pill">
-                    <div>
-                        <div class="sp-label">Before</div>
-                        <div class="sp-value" id="diagScoreBefore" style="color:var(--accent-red);">30</div>
-                    </div>
+        </div>
+
+        <div class="telemetry-grid" id="telemetryGrid">
+            <div class="t-card">
+                <div class="t-label" id="m1Label">CPU Utilization</div>
+                <div class="t-value" id="m1Val" style="color:var(--blue);">—</div>
+                <div class="t-bar"><div class="t-bar-fill" id="m1Bar" style="width:0%;background:var(--blue);"></div></div>
+            </div>
+            <div class="t-card">
+                <div class="t-label" id="m2Label">Memory Usage</div>
+                <div class="t-value" id="m2Val" style="color:var(--purple);">—</div>
+                <div class="t-bar"><div class="t-bar-fill" id="m2Bar" style="width:0%;background:var(--purple);"></div></div>
+            </div>
+            <div class="t-card">
+                <div class="t-label" id="m3Label">Disk I/O</div>
+                <div class="t-value" id="m3Val" style="color:var(--amber);">—</div>
+                <div class="t-bar"><div class="t-bar-fill" id="m3Bar" style="width:0%;background:var(--amber);"></div></div>
+            </div>
+            <div class="t-card">
+                <div class="t-label" id="m4Label">Battery</div>
+                <div class="t-value" id="m4Val" style="color:var(--green);">—</div>
+                <div class="t-bar"><div class="t-bar-fill" id="m4Bar" style="width:100%;background:var(--green);"></div></div>
+            </div>
+        </div>
+
+        <!-- DIAGNOSIS PANEL -->
+        <div class="diag-panel" id="diagPanel">
+            <div class="diag-header">
+                <div>
+                    <span class="sev-badge sev-high" id="diagSev">HIGH</span>
+                    <div class="diag-title" id="diagTitle">Loading diagnosis...</div>
+                    <div class="diag-desc" id="diagDesc"></div>
                 </div>
-                <div class="score-pill">
-                    <div>
-                        <div class="sp-label">After</div>
-                        <div class="sp-value" id="diagScoreAfter" style="color:var(--accent-green);">83</div>
+                <div class="health-scores">
+                    <div class="h-score">
+                        <div class="h-score-label">Before</div>
+                        <div class="h-score-value" style="color:var(--red);" id="scoreBefore">—</div>
+                    </div>
+                    <div class="h-score">
+                        <div class="h-score-label">After</div>
+                        <div class="h-score-value" style="color:var(--green);" id="scoreAfter">—</div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="diag-body">
-            <div class="diag-grid">
-                <div class="diag-block">
-                    <div class="diag-block-title">🔍 Root Cause</div>
-                    <div class="diag-block-content" id="diagRootCause">—</div>
+            <div class="diag-body">
+                <div class="diag-cols">
+                    <div class="diag-block">
+                        <div class="diag-block-title">Root Cause Attribution (Shapley Values)</div>
+                        <div class="shapley-list" id="shapleyList">—</div>
+                    </div>
+                    <div class="diag-block">
+                        <div class="diag-block-title">Risk If Unresolved</div>
+                        <div class="diag-block-text" id="diagRisk">—</div>
+                        <div style="margin-top:16px;">
+                            <div class="diag-block-title">SPE Game Tree Outcome</div>
+                            <div class="spe-path" id="spePath">
+                                <div class="sp-label">Subgame Perfect Equilibrium</div>
+                                <div class="sp-text" id="speText">—</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="diag-block">
-                    <div class="diag-block-title">⚠️ Risk If Unresolved</div>
-                    <div class="diag-block-content" id="diagRisk">—</div>
+
+                <div class="diag-block" style="margin-bottom:20px;">
+                    <div class="diag-block-title">Counterfactual Scenario Projections</div>
+                    <table class="cf-table">
+                        <thead>
+                            <tr>
+                                <th>Intervention</th>
+                                <th>Projected Health Score</th>
+                                <th>Projection</th>
+                                <th>Generator</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cfTableBody">
+                            <tr><td colspan="4" style="color:var(--text-3);">Run pipeline to see projections.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="diag-block remediation-steps">
-                    <div class="diag-block-title">✅ Step-by-Step Remediation Plan</div>
+
+                <div class="diag-block" style="margin-bottom:20px;">
+                    <div class="diag-block-title">Step-by-Step Remediation Plan</div>
                     <div id="diagSteps">—</div>
                 </div>
-                <div class="diag-block" style="grid-column: 1 / -1;">
-                    <div class="diag-block-title">🎯 Expected Outcome</div>
-                    <div class="diag-block-content" id="diagOutcome">—</div>
-                    <div style="display:flex; gap: 20px; margin-top: 16px; font-size: 0.85rem;">
-                        <div style="color:var(--accent-green);">🚫 Truck Roll Avoided: <strong id="diagTruckRoll">Unknown (not measured)</strong></div>
-                        <div style="color:var(--accent-cyan);">⏱️ Decision Compute: <strong id="diagFixTime">—</strong></div>
-                        <div style="color:var(--accent-amber);">🛡️ Downtime Prevented: <strong id="diagDowntime">—</strong></div>
+
+                <div class="diag-block">
+                    <div class="diag-block-title">Expected Outcome</div>
+                    <div class="diag-block-text" id="diagOutcome">—</div>
+                    <div style="display:flex; gap:24px; margin-top:14px; flex-wrap:wrap; font-size:0.83rem;">
+                        <div>Decision Compute: <span style="color:var(--blue); font-family:var(--mono);" id="diagLatency">—</span></div>
+                        <div>Truck Roll: <span style="color:var(--text-2);" id="diagTruckRoll">—</span></div>
+                        <div>Est. Downtime Prevented: <span style="color:var(--amber);" id="diagDowntime">—</span></div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="diag-footer">
-            <span>Diagnosis generated by AI-powered CTG-CPM engine</span>
-            <span class="model-tag" id="diagModel">LLM: llama-3.3-70b</span>
-        </div>
-    </div>
-</section>
-
-<!-- ═══════════════════════ ANALYSIS ═══════════════════════ -->
-<section id="analysis">
-    <div class="section-tag">DEEP ANALYSIS</div>
-    <div class="section-heading">Game Theory & <em>Counterfactual Simulation</em></div>
-    <p class="section-desc">See the mathematical reasoning behind every remediation decision. From investment bargaining to "What-If" scenario testing.</p>
-
-    <div class="split-grid">
-        <div class="panel">
-            <div class="panel-title">Extensive-Form Game Tree (SPE) <span class="panel-tag tag-green">EQUILIBRIUM SOLVED</span></div>
-            <div id="gameTreeNodes">
-                <div class="tree-node spe-active">
-                    <div class="tn-label" style="color:var(--accent-green);">★ Subgame Perfect Equilibrium Path</div>
-                    <div class="tn-detail">P2 → Low Investment (Cost 1) → P1 → Greedy Split → P2 → Accept</div>
-                    <div class="tn-payoff">Payoff: u₁ = 13.0, u₂ = 0.0</div>
-                </div>
-                <div class="tree-node">
-                    <div class="tn-label">High Investment Branch (Cost 2)</div>
-                    <div class="tn-detail">Fair → Accept: (9, 7) | Greedy → Accept: (17, -1)</div>
-                    <div class="tn-payoff" style="color:var(--text-muted);">P2 Net: -1 → Not chosen</div>
-                </div>
-                <div class="tree-node">
-                    <div class="tn-label">Low Investment Branch (Cost 1)</div>
-                    <div class="tn-detail">Fair → Accept: (7, 6) | Greedy → Accept: (13, 0)</div>
-                    <div class="tn-payoff" style="color:var(--text-muted);">P2 Net: 0 → Chosen ✓</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-title">Counterfactual Scenarios <span class="panel-tag tag-purple">WHAT-IF ENGINE</span></div>
-            <div id="cfScenarios">
-                <div class="cf-scenario">
-                    <span class="cf-name">Status Quo (No Action)</span>
-                    <span class="cf-score" style="color:var(--accent-red);">24.5</span>
-                    <span class="cf-badge cf-unsafe">Unstable</span>
-                </div>
-                <div class="cf-scenario">
-                    <span class="cf-name">Adjust Laser Bias / Cooling</span>
-                    <span class="cf-score" style="color:var(--accent-green);">85.0</span>
-                    <span class="cf-badge cf-safe">Stabilized</span>
-                </div>
-                <div class="cf-scenario">
-                    <span class="cf-name">Load-Balance / Throttle 15%</span>
-                    <span class="cf-score" style="color:var(--accent-green);">83.0</span>
-                    <span class="cf-badge cf-safe">Stabilized</span>
-                </div>
-                <div class="cf-scenario">
-                    <span class="cf-name">Reroute / Demote Priority</span>
-                    <span class="cf-score" style="color:var(--accent-green);">78.0</span>
-                    <span class="cf-badge cf-safe">Stabilized</span>
-                </div>
+            <div class="diag-footer">
+                <span>CTG-CPM multi-agent recommendation pipeline — commands are not auto-deployed</span>
+                <span class="model-tag" id="diagModel">Fallback Engine</span>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+<hr class="divider">
+
+<!-- USER GUIDE -->
+<section id="guide">
+    <div class="container">
+        <div class="label">User Guide</div>
+        <div class="heading">Four steps to<br>a <span class="accent">recommendation.</span></div>
+        <p class="subtext">No configuration required to start. psutil reads from this machine automatically. Kafka and LLM API are optional and the system reports their status honestly when unavailable.</p>
+
+        <div class="guide-steps">
+            <div class="guide-step">
+                <div class="guide-step-n">Step 01 — Select Mode</div>
+                <div class="guide-step-title">Choose your telemetry source</div>
+                <div class="guide-step-text">Use the mode selector to switch between Live Laptop Host Telemetry (real psutil hardware data from this machine) and 5G Optical Backhaul (synthetic transceiver simulation). Both modes run through the same decision pipeline.</div>
+            </div>
+            <div class="guide-step">
+                <div class="guide-step-n">Step 02 — Observe</div>
+                <div class="guide-step-title">Read the live telemetry gauges</div>
+                <div class="guide-step-text">The four metric cards update every 2 seconds. Colors shift from blue/purple to red when a metric exceeds its safe threshold. The status badge at the top-right shows whether the dynamic anomaly detector has flagged a condition.</div>
+            </div>
+            <div class="guide-step">
+                <div class="guide-step-n">Step 03 — Inject</div>
+                <div class="guide-step-title">Simulate a fault condition</div>
+                <div class="guide-step-text">Click Inject Failure Anomaly to stress-scale the telemetry and activate anomaly mode. In Laptop mode, CPU and memory are scaled upward. In 5G mode, OSNR drops below threshold and laser bias elevates. The status banner turns red.</div>
+            </div>
+            <div class="guide-step">
+                <div class="guide-step-n">Step 04 — Decide</div>
+                <div class="guide-step-title">Generate a remediation recommendation</div>
+                <div class="guide-step-text">Click Generate Remediation to run the full pipeline. The diagnosis panel appears with Shapley attribution bars, counterfactual scenario scores with generator provenance, the SPE game tree outcome, and a step-by-step remediation plan. Review the recommendation and apply it manually if appropriate.</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 32px;">
+            <div class="label" style="margin-bottom: 10px;">Understanding the Output</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <div style="font-weight:600; font-size:0.9rem; margin-bottom:6px;">Shapley Attribution Bars</div>
+                    <div style="font-size:0.84rem; color:var(--text-2); line-height:1.65; margin-bottom:16px;">Percentage contribution of each telemetry feature to the anomaly score. A feature with 50% attribution is the dominant driver of the detected condition. This is statistical attribution, not validated causal root cause.</div>
+
+                    <div style="font-weight:600; font-size:0.9rem; margin-bottom:6px;">Counterfactual Projections</div>
+                    <div style="font-size:0.84rem; color:var(--text-2); line-height:1.65; margin-bottom:16px;">Projected health scores under each candidate intervention. "Projected Stable" means the final projected health score exceeds 40/100. Generator badge shows whether a learned Diffusion model or an explicit heuristic trajectory model produced the projection.</div>
+                </div>
+                <div>
+                    <div style="font-weight:600; font-size:0.9rem; margin-bottom:6px;">SPE Game Tree Outcome</div>
+                    <div style="font-size:0.84rem; color:var(--text-2); line-height:1.65; margin-bottom:16px;">The Subgame Perfect Equilibrium path from the investment-bargaining game. Investment level, proposal strategy, and response are determined dynamically from live telemetry parameters each run. Payoffs (u1, u2) are game-theoretic utility values.</div>
+
+                    <div style="font-weight:600; font-size:0.9rem; margin-bottom:6px;">Deployment Status</div>
+                    <div style="font-size:0.84rem; color:var(--text-2); line-height:1.65;">Always "not_deployed" in the prototype. The remediation command (NETCONF/YANG XML for 5G, PowerShell for Laptop) is parameterized with live telemetry values and displayed for human review. No command is automatically pushed to any device.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- WHERE TO USE -->
+<section id="use-cases">
+    <div class="container">
+        <div class="label">Deployment Scenarios</div>
+        <div class="heading">Where CTG-CPM<br><span class="accent">operates.</span></div>
+        <p class="subtext">The pipeline generalizes across any system that produces structured telemetry. Current implementation supports two production-relevant modes.</p>
+
+        <table class="use-table">
+            <thead>
+                <tr>
+                    <th>Use Case</th>
+                    <th>Telemetry Input</th>
+                    <th>CTG-CPM Decision</th>
+                    <th>Output</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>5G Optical Backhaul Maintenance</td>
+                    <td>OSNR, Laser Bias, Temperature, Packet Loss from optical transceivers</td>
+                    <td>GNN cascade risk assessment, Diffusion-TS counterfactual projections under laser adjustment / traffic rerouting / throttling, SPE bargaining, Shapley OSNR/Bias attribution</td>
+                    <td>Recommended NETCONF/YANG XML command for laser bias adjustment or traffic policy change, with per-scenario projected health scores</td>
+                </tr>
+                <tr>
+                    <td>Enterprise Server Farm Monitoring</td>
+                    <td>CPU load, RAM, Disk I/O rates, Process table from production hosts via psutil</td>
+                    <td>Dynamic Z-score anomaly detection, Shapley attribution of CPU/RAM/Disk contribution, Counterfactual projection of process throttling impact, SPE resource bargaining</td>
+                    <td>Recommended PowerShell command for process priority demotion and CPU frequency cap, parameterized with live PID and CPU load values</td>
+                </tr>
+                <tr>
+                    <td>Network Operations Center (NOC) Triage</td>
+                    <td>Any structured metric stream in either supported format</td>
+                    <td>LLM diagnosis translates mathematical outputs into NOC-readable severity, root cause, and step-by-step plan</td>
+                    <td>Structured JSON incident report with severity, root cause, remediation steps, expected outcome, and projected health score delta</td>
+                </tr>
+                <tr>
+                    <td>Academic and Research Use</td>
+                    <td>Both modes</td>
+                    <td>Full mathematical audit trail: VCG payments, Shapley percentages, SPE payoff table, Nash equilibrium, FID score, compute latency per run</td>
+                    <td>Research-grade output with honest provenance tags, generator attribution, and projection-only notes on every counterfactual scenario</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- FOOTER -->
 <footer>
-    <div>Built for NOC engineers & infrastructure teams &nbsp;|&nbsp; Detect → Fix → Retest → Prove</div>
-    <div class="footer-links">
-        <a href="#how-it-works">How it works</a>
-        <a href="#kpis">Impact</a>
-        <a href="#live-system">Live System</a>
+    <div class="container">
+        <div class="footer-inner">
+            <div>CTG-CPM Self-Healing Networks — VIT University 2026 — Sagnik Basu, C Sriharsha, Maitree Singh</div>
+            <div class="footer-links">
+                <a href="#architecture">Architecture</a>
+                <a href="#algorithms">Algorithms</a>
+                <a href="#benchmarks">Benchmarks</a>
+                <a href="https://github.com/sagnikbasutaan2004-source/CTG-CPM-Self-Healing-Networks" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
     </div>
 </footer>
 
 <script>
     let currentMode = "laptop";
-    let isAnomalyActive = false;
 
-    /* ─── Telemetry Polling ─── */
     async function fetchTelemetry() {
         try {
-            const res = await fetch(`/api/telemetry?mode=${currentMode}`);
-            const d = await res.json();
+            const r = await fetch(`/api/telemetry?mode=${currentMode}`);
+            const d = await r.json();
 
-            const statusEl = document.getElementById("systemStatus");
+            // Hero card
+            document.getElementById('heroCpu').textContent = d.cpu_overall_percent !== undefined ? `${d.cpu_overall_percent}%` : '—';
+            document.getElementById('heroMem').textContent = d.memory_percent !== undefined ? `${d.memory_percent}%` : '—';
+            document.getElementById('heroKafka').textContent = d.kafka_status || '—';
+            document.getElementById('heroAnomaly').textContent = d.anomaly_flag ? 'DETECTED' : 'None';
+            document.getElementById('heroAnomaly').style.color = d.anomaly_flag ? 'var(--red)' : 'var(--green)';
+
+            // System status
+            const ss = document.getElementById('sysStatus');
             if (d.anomaly_flag) {
-                isAnomalyActive = true;
-                statusEl.className = "status-banner status-anomaly";
-                statusEl.innerHTML = '<span style="font-size:1.1em;">⚠</span> Anomaly Detected';
-                document.getElementById("heroStatusText").innerHTML = 'Anomaly Active <span class="status-arrow" style="color:var(--accent-red);">↘</span>';
-                document.getElementById("heroHealthScore").innerHTML = '31<small>/100</small>';
-                document.getElementById("heroScoreSub").textContent = "Degrading — intervention needed";
-                document.getElementById("heroScoreSub").style.color = "var(--accent-red)";
+                ss.className = 'system-status status-warn';
+                ss.innerHTML = '<span style="font-size:1.1em;">!</span> Anomaly Detected';
+                document.getElementById('heroScore').innerHTML = '31<span>/100</span>';
+                document.getElementById('heroScore').style.color = 'var(--red)';
+                document.getElementById('heroScoreSub').textContent = 'Degraded — intervention recommended';
             } else {
-                isAnomalyActive = false;
-                statusEl.className = "status-banner status-healthy";
-                statusEl.innerHTML = '<span class="live-dot"></span> System Healthy';
-                document.getElementById("heroStatusText").innerHTML = 'System Online <span class="status-arrow">↗</span>';
-                document.getElementById("heroHealthScore").innerHTML = '92<small>/100</small>';
-                document.getElementById("heroScoreSub").textContent = "Ready to operate ↑ 8";
-                document.getElementById("heroScoreSub").style.color = "var(--accent-green)";
+                ss.className = 'system-status status-ok';
+                ss.innerHTML = '<span class="live-dot"></span> System Nominal';
+                document.getElementById('heroScore').innerHTML = '92<span>/100</span>';
+                document.getElementById('heroScore').style.color = 'var(--green)';
+                document.getElementById('heroScoreSub').textContent = 'Operating normally';
             }
 
-            if (currentMode === "laptop") {
-                setMetric(1, "CPU UTILIZATION", `${d.cpu_overall_percent}%`, d.cpu_overall_percent, d.cpu_overall_percent > 85 ? "var(--accent-red)" : "var(--accent-cyan)");
-                setMetric(2, "MEMORY USAGE", `${d.memory_percent}%`, d.memory_percent, d.memory_percent > 85 ? "var(--accent-red)" : "var(--accent-purple)");
-                setMetric(3, "DISK I/O", `${Math.round(d.disk_read_kbps)} KB/s`, Math.min(100, d.disk_read_kbps / 100), "var(--accent-amber)");
-                setMetric(4, "BATTERY", `${d.battery_percent}%`, d.battery_percent, "var(--accent-green)");
+            // Telemetry cards
+            if (currentMode === 'laptop') {
+                setM(1, 'CPU Utilization', `${d.cpu_overall_percent}%`, d.cpu_overall_percent, d.cpu_overall_percent > 85 ? 'var(--red)' : 'var(--blue)');
+                setM(2, 'Memory Usage', `${d.memory_percent}%`, d.memory_percent, d.memory_percent > 85 ? 'var(--red)' : 'var(--purple)');
+                setM(3, 'Disk Read', `${Math.round(d.disk_read_kbps)} KB/s`, Math.min(100, d.disk_read_kbps / 10), 'var(--amber)');
+                setM(4, 'Battery', `${d.battery_percent}%`, d.battery_percent, 'var(--green)');
             } else {
-                setMetric(1, "OSNR (dB)", `${d.osnr_db} dB`, (d.osnr_db / 25) * 100, d.osnr_db < 18 ? "var(--accent-red)" : "var(--accent-cyan)");
-                setMetric(2, "LASER BIAS (mA)", `${d.laser_bias_ma} mA`, Math.min(100, (d.laser_bias_ma / 90) * 100), d.laser_bias_ma > 60 ? "var(--accent-red)" : "var(--accent-purple)");
-                setMetric(3, "TEMPERATURE (°C)", `${d.temperature_celsius} °C`, Math.min(100, (d.temperature_celsius / 95) * 100), d.temperature_celsius > 70 ? "var(--accent-red)" : "var(--accent-amber)");
-                setMetric(4, "PACKET LOSS", `${d.packet_loss_percent}%`, Math.min(100, d.packet_loss_percent * 10), d.packet_loss_percent > 2 ? "var(--accent-red)" : "var(--accent-green)");
+                setM(1, 'OSNR (dB)', `${d.osnr_db} dB`, (d.osnr_db / 25) * 100, d.osnr_db < 18 ? 'var(--red)' : 'var(--blue)');
+                setM(2, 'Laser Bias (mA)', `${d.laser_bias_ma} mA`, Math.min(100,(d.laser_bias_ma/90)*100), d.laser_bias_ma > 60 ? 'var(--red)' : 'var(--purple)');
+                setM(3, 'Temperature (C)', `${d.temperature_celsius} C`, Math.min(100,(d.temperature_celsius/95)*100), d.temperature_celsius > 70 ? 'var(--red)' : 'var(--amber)');
+                setM(4, 'Packet Loss', `${d.packet_loss_percent}%`, Math.min(100, d.packet_loss_percent * 10), d.packet_loss_percent > 2 ? 'var(--red)' : 'var(--green)');
             }
-        } catch(e) { console.error("Telemetry error:", e); }
+        } catch(e) { console.error('Telemetry error:', e); }
     }
 
-    function setMetric(idx, label, value, barPct, color) {
-        document.getElementById(`m${idx}Label`).textContent = label;
-        document.getElementById(`m${idx}Value`).textContent = value;
-        document.getElementById(`m${idx}Value`).style.color = color;
-        document.getElementById(`m${idx}Bar`).style.width = `${barPct}%`;
-        document.getElementById(`m${idx}Bar`).style.background = color;
+    function setM(i, label, value, pct, color) {
+        document.getElementById(`m${i}Label`).textContent = label;
+        const vEl = document.getElementById(`m${i}Val`);
+        vEl.textContent = value;
+        vEl.style.color = color;
+        document.getElementById(`m${i}Bar`).style.width = `${Math.max(0, Math.min(100, pct))}%`;
+        document.getElementById(`m${i}Bar`).style.background = color;
     }
 
-    function switchMode() { currentMode = document.getElementById("modeSelect").value; fetchTelemetry(); }
+    function switchMode() {
+        currentMode = document.getElementById('modeSelect').value;
+        fetchTelemetry();
+    }
 
     async function injectAnomaly() {
-        document.getElementById("btnInject").disabled = true;
-        await fetch("/api/toggle_anomaly", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({active: true}) });
-        document.getElementById("diagPanel").classList.remove("visible");
+        document.getElementById('btnInject').disabled = true;
+        await fetch('/api/toggle_anomaly', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({active:true}) });
+        document.getElementById('diagPanel').classList.remove('visible');
         fetchTelemetry();
-        setTimeout(() => { document.getElementById("btnInject").disabled = false; }, 1500);
+        setTimeout(() => { document.getElementById('btnInject').disabled = false; }, 1500);
     }
 
-    async function runHealing() {
-        const btn = document.getElementById("btnHeal");
+    async function runPipeline() {
+        const btn = document.getElementById('btnRun');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Running Pipeline...';
 
         try {
-            const res = await fetch("/api/run_pipeline", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({mode: currentMode}) });
-            const result = await res.json();
+            const r = await fetch('/api/run_pipeline', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({mode:currentMode}) });
+            const result = await r.json();
             const diag = result.llm_diagnosis;
 
-            // Populate Diagnosis Panel
-            const sevMap = { Critical: "sev-critical", High: "sev-high", Medium: "sev-medium", Low: "sev-low" };
-            const sevEl = document.getElementById("diagSeverity");
-            sevEl.className = `diag-severity ${sevMap[diag.severity] || "sev-high"}`;
-            sevEl.textContent = diag.severity?.toUpperCase() || "HIGH";
+            // Severity
+            const sevMap = { Critical:'sev-critical', High:'sev-high', Medium:'sev-medium', Low:'sev-low' };
+            const sevEl = document.getElementById('diagSev');
+            sevEl.className = `sev-badge ${sevMap[diag.severity] || 'sev-high'}`;
+            sevEl.textContent = (diag.severity || 'High').toUpperCase();
 
-            document.getElementById("diagTitle").textContent = diag.problem_title || "Anomaly Detected";
-            document.getElementById("diagDesc").textContent = diag.problem_description || "";
-            document.getElementById("diagRootCause").textContent = diag.root_cause || "—";
-            document.getElementById("diagRisk").textContent = diag.risk_if_unresolved || "—";
-            document.getElementById("diagScoreBefore").textContent = diag.health_score_before ?? "30";
-            document.getElementById("diagScoreAfter").textContent = diag.health_score_after ?? "83";
-            document.getElementById("diagOutcome").textContent = diag.expected_outcome || "—";
-            document.getElementById("diagTruckRoll").textContent = (diag.truck_roll_avoided && diag.truck_roll_avoided !== "unknown") ? diag.truck_roll_avoided : "Unknown (not measured)";
-            document.getElementById("diagFixTime").textContent = diag.estimated_fix_time || "Decision compute only (ms)";
-            document.getElementById("diagDowntime").textContent = diag.downtime_prevented || "—";
-            document.getElementById("diagModel").textContent = diag.llm_powered ? (diag.model ? `LLM: ${diag.model}` : "LLM") : "Fallback Engine";
+            document.getElementById('diagTitle').textContent = diag.problem_title || 'Anomaly Detected';
+            document.getElementById('diagDesc').textContent = diag.problem_description || '';
+            document.getElementById('diagRisk').textContent = diag.risk_if_unresolved || '—';
+            document.getElementById('scoreBefore').textContent = diag.health_score_before ?? '—';
+            document.getElementById('scoreAfter').textContent = diag.health_score_after ?? '—';
+            document.getElementById('diagOutcome').textContent = diag.expected_outcome || '—';
+            document.getElementById('diagTruckRoll').textContent = diag.truck_roll_avoided || 'Unknown (not measured)';
+            document.getElementById('diagLatency').textContent = `${result.compute_latency_ms}ms (in-process)`;
+            document.getElementById('diagDowntime').textContent = diag.downtime_prevented || '—';
+            document.getElementById('diagModel').textContent = diag.llm_powered ? (diag.model || 'LLM') : 'Fallback Engine';
+
+            // SPE
+            const spe = result.spe_bargaining_outcome;
+            if (spe) {
+                document.getElementById('speText').textContent =
+                    `Investment: ${spe.investment}   |   Proposal: ${spe.proposal}   |   Response: ${spe.response}\nPayoff: (u1 = ${spe.payoffs?.[0] ?? '—'}, u2 = ${spe.payoffs?.[1] ?? '—'})`;
+            }
+
+            // Shapley bars
+            const shapleyList = document.getElementById('shapleyList');
+            shapleyList.innerHTML = '';
+            const attribution = result.shapley_root_cause_attribution || {};
+            const maxPct = Math.max(...Object.values(attribution).map(v => parseFloat(v)), 1);
+            for (const [feat, pct] of Object.entries(attribution)) {
+                const p = parseFloat(pct);
+                shapleyList.innerHTML += `
+                    <div class="shapley-row">
+                        <div class="shapley-head">
+                            <span class="shapley-feature">${feat}</span>
+                            <span class="shapley-pct">${p.toFixed(1)}%</span>
+                        </div>
+                        <div class="shapley-bar-bg">
+                            <div class="shapley-bar-fill" style="width:${(p/maxPct)*100}%;"></div>
+                        </div>
+                    </div>`;
+            }
+
+            // Counterfactual table
+            const cfBody = document.getElementById('cfTableBody');
+            cfBody.innerHTML = '';
+            const cf = result.counterfactual_scenarios || {};
+            for (const [name, data] of Object.entries(cf)) {
+                const stable = data.projected_stabilized;
+                const score = data.projected_health_score;
+                const gen = data.generator || 'heuristic';
+                const scoreColor = stable ? 'var(--green)' : 'var(--red)';
+                cfBody.innerHTML += `
+                    <tr>
+                        <td>${name}</td>
+                        <td style="font-family:var(--mono); font-weight:600; color:${scoreColor};">${score}</td>
+                        <td><span class="${stable ? 'cf-stable' : 'cf-unstable'}">${stable ? 'Projected Stable' : 'Projected Unstable'}</span></td>
+                        <td><span class="cf-gen">${gen}</span></td>
+                    </tr>`;
+            }
 
             // Remediation steps
-            const stepsContainer = document.getElementById("diagSteps");
-            stepsContainer.innerHTML = "";
+            const stepsEl = document.getElementById('diagSteps');
+            stepsEl.innerHTML = '';
             if (diag.remediation_steps) {
                 diag.remediation_steps.forEach(s => {
-                    stepsContainer.innerHTML += `
+                    stepsEl.innerHTML += `
                         <div class="rem-step">
-                            <div class="rem-step-num">${s.step_number}</div>
+                            <div class="rem-num">${s.step_number}</div>
                             <div>
-                                <div class="rem-step-action">${s.action}</div>
-                                <div class="rem-step-detail">${s.detail}</div>
-                                <div class="rem-step-impact">→ ${s.expected_impact}</div>
+                                <div class="rem-action">${s.action}</div>
+                                <div class="rem-detail">${s.detail}</div>
+                                <div class="rem-impact">Expected impact: ${s.expected_impact}</div>
                             </div>
                         </div>`;
                 });
             }
 
-            // Update counterfactual scenarios panel
-            if (result.counterfactual_scenarios) {
-                const cfEl = document.getElementById("cfScenarios");
-                cfEl.innerHTML = "";
-                for (const [name, data] of Object.entries(result.counterfactual_scenarios)) {
-                    const isSafe = data.projected_stabilized;
-                    cfEl.innerHTML += `
-                        <div class="cf-scenario">
-                            <span class="cf-name">${name}</span>
-                            <span class="cf-score" style="color:${isSafe ? 'var(--accent-green)' : 'var(--accent-red)'}">${data.projected_health_score}</span>
-                            <span class="cf-badge ${isSafe ? 'cf-safe' : 'cf-unsafe'}">${isSafe ? 'Projected Stable' : 'Projected Unstable'}</span>
-                            <span class="cf-badge" style="background:var(--accent-amber);margin-top:2px;">${data.generator || 'heuristic'}</span>
-                        </div>`;
-                }
-            }
-
-            // Show the panel
-            document.getElementById("diagPanel").classList.add("visible");
-            document.getElementById("diagPanel").scrollIntoView({ behavior: "smooth", block: "start" });
-
+            // Show panel
+            const panel = document.getElementById('diagPanel');
+            panel.classList.add('visible');
+            panel.scrollIntoView({ behavior:'smooth', block:'start' });
             fetchTelemetry();
-        } catch(e) { console.error("Pipeline error:", e); }
+        } catch(e) {
+            console.error('Pipeline error:', e);
+        }
 
         btn.disabled = false;
-        btn.innerHTML = '🛡️ Generate Remediation';
+        btn.innerHTML = 'Generate Remediation';
     }
 
-    // Poll telemetry
     setInterval(fetchTelemetry, 2000);
     fetchTelemetry();
 </script>

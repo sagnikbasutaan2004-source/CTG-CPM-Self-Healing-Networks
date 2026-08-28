@@ -4,7 +4,8 @@ CTG-CPM: Predictive Maintenance Recommendations via Counterfactual Telemetry
 Premium Flask Web Application with Dynamic Game Theory & LLM Diagnostics
 """
 
-from flask import Flask, jsonify, render_template, request
+import os
+from flask import Flask, jsonify, render_template, request, send_from_directory
 from telemetry_collector import LaptopTelemetryCollector, SyntheticTelemetryGenerator
 from counterfactual_engine import CounterfactualGenerator
 from agentic_remediator import MultiAgentRemediator
@@ -12,6 +13,13 @@ from game_engine import BargainingGameTree
 from llm_diagnostician import generate_diagnosis_and_remediation
 
 app = Flask(__name__)
+
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    """Serve static files (benchmark figures, etc.) from the project root directory."""
+    return send_from_directory(_BASE_DIR, filename)
 
 laptop_collector = LaptopTelemetryCollector()
 synthetic_generator = SyntheticTelemetryGenerator()
