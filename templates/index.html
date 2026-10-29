@@ -264,6 +264,34 @@
             font-size: 0.85rem; font-family: 'Inter', sans-serif; cursor: pointer;
         }
         .mode-select:focus { outline: none; border-color: var(--green); }
+        .dataset-feature-grid {
+            display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px; max-height: 480px; overflow: auto; margin: 16px 0;
+        }
+        .dataset-feature {
+            display: flex; flex-direction: column; gap: 5px;
+            padding: 10px; border: 1px solid var(--border); border-radius: var(--r-sm);
+            background: var(--bg);
+        }
+        .dataset-feature label { font-family: var(--mono); font-size: 0.72rem; color: var(--text-2); }
+        .dataset-feature input, .dataset-search, .dataset-file {
+            background: var(--bg); color: var(--text); border: 1px solid var(--border);
+            border-radius: var(--r-sm); padding: 8px; font: 0.82rem var(--mono);
+        }
+        .dataset-file { width: 100%; max-width: 460px; }
+        .dataset-search { width: 100%; margin-top: 16px; }
+        .dataset-consent { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; color: var(--text-2); font-size: 0.82rem; }
+        .dataset-consent input { margin-top: 4px; accent-color: var(--green); }
+        .dataset-result-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 24px 0; }
+        .dataset-remediation-list { display: flex; flex-direction: column; gap: 12px; }
+        .dataset-remediation-step { border-left: 2px solid var(--green); padding: 4px 12px; }
+        @media (max-width: 760px) {
+            .dataset-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .dataset-result-metrics { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .dataset-feature-grid, .dataset-result-metrics { grid-template-columns: 1fr; }
+        }
         .btn-action {
             padding: 9px 20px; border-radius: var(--r-md); font-weight: 600;
             font-size: 0.85rem; cursor: pointer; border: none;
@@ -468,6 +496,7 @@
             <a href="#algorithms">Algorithms</a>
             <a href="#benchmarks">Benchmarks</a>
             <a href="#live-system">Live System</a>
+            <a href="#dataset-lab">Real Dataset</a>
             <a href="#guide">User Guide</a>
         </div>
         <a href="#live-system" class="nav-pill">Run Inspection</a>
@@ -618,7 +647,7 @@
                 </div>
                 <div class="arch-layer-body">
                     <div class="arch-layer-title">LLM Diagnostics, REST API, and Dashboard</div>
-                    <div class="arch-layer-desc">The Groq LLM API translates mathematical outputs into structured JSON diagnoses with severity, root cause, remediation steps, and expected outcome narrative. Flask serves five REST endpoints. The web dashboard presents live telemetry, diagnosis panels, counterfactual scenarios, and the SPE game tree interactively.</div>
+                    <div class="arch-layer-desc">The Groq LLM API translates mathematical outputs into structured JSON diagnoses with severity, root cause, remediation steps, and expected outcome narrative. Flask serves six REST endpoints, including the real APS dataset benchmark. The web dashboard presents live telemetry, diagnosis panels, counterfactual scenarios, the SPE game tree, and held-out dataset metrics.</div>
                     <div class="arch-layer-tags">
                         <span class="tag">Groq LLM API</span>
                         <span class="tag">Flask</span>
@@ -916,6 +945,112 @@ Find (r,c) where:
 
 <hr class="divider">
 
+<!-- REAL DATASET INFERENCE -->
+<section id="dataset-lab">
+    <div class="container">
+        <div class="label">Real Dataset Inference</div>
+        <div class="heading">Inspect a truck <span class="accent">record.</span></div>
+        <p class="subtext">
+            Submit one Scania APS record to the already-trained CTG-CPM model. This page performs
+            inference only; it does not train or evaluate on the test dataset. The prediction is routed
+            through CTG-CPM attribution and task allocation, then produces a human-reviewed maintenance
+            recommendation.
+        </p>
+
+        <div class="algo-card">
+            <div class="algo-num">PRE-TRAINED MODEL · UCI DOI 10.24432/C51S51</div>
+            <div class="algo-name">APS Failure at Scania Trucks</div>
+            <div class="algo-desc" id="apsModelStatus">
+                Checking for the saved APS model...
+            </div>
+            <div style="font-weight:600; margin-top:20px;">Option 1: Upload one record</div>
+            <div class="algo-desc" style="margin-top:6px;">
+                Upload a UTF-8 CSV with the APS feature names as column headers and exactly one data row.
+                Use blank or <code>na</code> for missing values. If a <code>class</code> column is present,
+                it is ignored and never used as a model input.
+            </div>
+            <div class="controls-row">
+                <input class="dataset-file" id="apsCsvFile" type="file" accept=".csv,text/csv" aria-label="Upload one APS record CSV">
+                <button class="btn-action btn-run aps-predict-button" onclick="predictApsRecord('csv')">
+                    Predict Uploaded Record
+                </button>
+            </div>
+
+            <details style="margin-top:18px;">
+                <summary style="cursor:pointer; color:var(--blue); font-weight:600;">Option 2: Enter feature values manually</summary>
+                <div class="algo-desc" style="margin-top:12px;">
+                    Enter values for the anonymized APS sensor features. Fields can be left blank when unknown;
+                    at least one model-used feature must have a numeric value.
+                </div>
+                <input class="dataset-search" id="apsFeatureSearch" type="search" placeholder="Filter feature names, e.g. aa_000" aria-label="Filter APS feature fields">
+                <div class="dataset-feature-grid" id="apsManualFeatures"></div>
+                <button class="btn-action btn-run aps-predict-button" onclick="predictApsRecord('manual')">
+                    Predict Entered Record
+                </button>
+            </details>
+
+            <label class="dataset-consent">
+                <input type="checkbox" id="apsLlmConsent">
+                <span>
+                    I consent to sending this record’s top contributing feature values and model risk
+                    probability to the configured Groq LLM API for a written explanation. If unchecked,
+                    the system uses its local recommendation template and sends no record values to the LLM.
+                </span>
+            </label>
+            <div class="system-status status-ok" id="datasetStatus" role="status" aria-live="polite">
+                Ready
+            </div>
+        </div>
+
+        <div class="diag-panel" id="datasetResults" aria-live="polite">
+            <div class="diag-header">
+                <div>
+                    <div class="diag-title" id="datasetTitle">APS record assessment</div>
+                    <div class="diag-desc" id="datasetSummary"></div>
+                </div>
+            </div>
+            <div class="diag-body">
+                <div class="dataset-result-metrics" id="datasetPredictionMetrics"></div>
+                <div class="diag-cols">
+                    <div class="diag-block">
+                        <div class="diag-block-title">Top statistical contributors</div>
+                        <div class="shapley-list" id="apsAttributions"></div>
+                    </div>
+                    <div class="diag-block">
+                        <div class="diag-block-title">CTG-CPM task allocation</div>
+                        <div class="diag-block-text" id="datasetAllocation"></div>
+                    </div>
+                </div>
+                <div class="diag-block" style="margin-top:20px;">
+                    <div class="diag-block-title">Diagnosis and recommended actions</div>
+                    <div class="diag-title" id="apsDiagnosisTitle"></div>
+                    <div class="diag-block-text" id="apsDiagnosisDescription"></div>
+                    <div class="diag-block-text" id="apsDiagnosisRootCause" style="margin-top:10px;"></div>
+                    <div class="dataset-remediation-list" id="apsRemediationSteps" style="margin-top:18px;"></div>
+                    <div class="diag-block-text" id="apsLlmStatus" style="margin-top:14px;"></div>
+                </div>
+                <div class="diag-cols" style="margin-top:20px;">
+                    <div class="diag-block">
+                        <div class="diag-block-title">Risk if not addressed</div>
+                        <div class="diag-block-text" id="apsRisk"></div>
+                    </div>
+                    <div class="diag-block">
+                        <div class="diag-block-title">Evidence limitations</div>
+                        <div class="diag-block-text">
+                            APS sensor names are anonymized. This is a risk prediction and statistical feature
+                            attribution, not proof of cause. The dataset contains no repair outcomes, so
+                            repair effectiveness is unknown. Recommendations require qualified human review;
+                            no repair command is generated or deployed.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
 <!-- USER GUIDE -->
 <section id="guide">
     <div class="container">
@@ -1035,6 +1170,198 @@ Find (r,c) where:
 
 <script>
     let currentMode = "laptop";
+
+    async function loadApsFeatureSchema() {
+        const status = document.getElementById('datasetStatus');
+        try {
+            const response = await fetch('/api/datasets/aps/features');
+            const schema = await response.json();
+            if (!response.ok) {
+                throw new Error(schema.details || schema.error || 'Saved model is unavailable.');
+            }
+            const fields = document.getElementById('apsManualFeatures');
+            fields.replaceChildren();
+            schema.feature_names.forEach(name => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'dataset-feature';
+                wrapper.dataset.featureName = name.toLowerCase();
+                const label = document.createElement('label');
+                label.htmlFor = `aps-feature-${name}`;
+                label.textContent = name;
+                const input = document.createElement('input');
+                input.id = `aps-feature-${name}`;
+                input.name = name;
+                input.type = 'number';
+                input.step = 'any';
+                input.placeholder = 'blank = missing';
+                input.autocomplete = 'off';
+                wrapper.append(label, input);
+                fields.appendChild(wrapper);
+            });
+            document.getElementById('apsModelStatus').textContent =
+                `${schema.dataset}: saved model ready. ` +
+                `${schema.usable_features} selected features; alert threshold ` +
+                `${(schema.threshold * 100).toFixed(2)}%. This dashboard uses inference only.`;
+            document.querySelectorAll('.aps-predict-button').forEach(button => {
+                button.disabled = false;
+            });
+            status.textContent = 'Pre-trained model ready';
+        } catch (error) {
+            document.getElementById('apsModelStatus').textContent =
+                `Saved model unavailable: ${error.message} Train it once with py train_aps_model.py, then restart the dashboard.`;
+            status.className = 'system-status status-warn';
+            status.textContent = 'Pre-trained model unavailable';
+            document.querySelectorAll('.aps-predict-button').forEach(button => {
+                button.disabled = true;
+            });
+        }
+    }
+
+    async function predictApsRecord(source) {
+        const status = document.getElementById('datasetStatus');
+        const panel = document.getElementById('datasetResults');
+        const consent = document.getElementById('apsLlmConsent').checked;
+        const buttons = document.querySelectorAll('.aps-predict-button');
+        buttons.forEach(button => { button.disabled = true; });
+        status.className = 'system-status status-ok';
+        status.textContent = 'Running saved-model inference...';
+        panel.classList.remove('visible');
+
+        try {
+            let response;
+            if (source === 'csv') {
+                const file = document.getElementById('apsCsvFile').files[0];
+                if (!file) {
+                    throw new Error('Choose a one-record APS CSV file first.');
+                }
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('llm_consent', String(consent));
+                response = await fetch('/api/datasets/aps/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+            } else {
+                const features = {};
+                document.querySelectorAll('#apsManualFeatures input').forEach(input => {
+                    features[input.name] = input.value === '' ? null : input.value;
+                });
+                response = await fetch('/api/datasets/aps/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ features, llm_consent: consent })
+                });
+            }
+
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.details || result.error || 'Record prediction failed.');
+            }
+
+            const diagnosis = result.diagnosis;
+            document.getElementById('datasetTitle').textContent =
+                diagnosis.problem_title;
+            document.getElementById('datasetSummary').textContent =
+                `${result.dataset} · ${result.model} · ` +
+                `${result.input_feature_count} entered numeric values`;
+            const metricDefinitions = [
+                ['Failure risk', `${(result.failure_probability * 100).toFixed(2)}%`],
+                ['Alert threshold', `${(result.threshold * 100).toFixed(2)}%`],
+                ['Assessment', result.anomaly_detected ? 'Alert' : 'Below threshold'],
+                ['Model features supplied', `${result.usable_feature_count} / ${result.selected_feature_count}`]
+            ];
+            const metricsContainer = document.getElementById('datasetPredictionMetrics');
+            metricsContainer.replaceChildren();
+            metricDefinitions.forEach(([label, value]) => {
+                const card = document.createElement('div');
+                card.className = 'metric-stat';
+                const labelElement = document.createElement('div');
+                labelElement.className = 'ms-label';
+                labelElement.textContent = label;
+                const valueElement = document.createElement('div');
+                valueElement.className = 'ms-value';
+                valueElement.textContent = value;
+                card.append(labelElement, valueElement);
+                metricsContainer.appendChild(card);
+            });
+
+            const attributionList = document.getElementById('apsAttributions');
+            attributionList.replaceChildren();
+            Object.entries(result.feature_attribution_percent || {}).forEach(([feature, percentage]) => {
+                const row = document.createElement('div');
+                row.className = 'shapley-row';
+                const head = document.createElement('div');
+                head.className = 'shapley-head';
+                const featureName = document.createElement('span');
+                featureName.className = 'shapley-feature';
+                featureName.textContent = `${feature}: ${result.top_feature_values?.[feature] ?? 'missing'}`;
+                const percent = document.createElement('span');
+                percent.className = 'shapley-pct';
+                percent.textContent = `${Number(percentage).toFixed(1)}%`;
+                head.append(featureName, percent);
+                const bar = document.createElement('div');
+                bar.className = 'shapley-bar-bg';
+                const fill = document.createElement('div');
+                fill.className = 'shapley-bar-fill';
+                fill.style.width = `${Math.max(0, Math.min(100, Number(percentage)))}%`;
+                bar.appendChild(fill);
+                row.append(head, bar);
+                attributionList.appendChild(row);
+            });
+
+            document.getElementById('datasetAllocation').textContent =
+                Object.entries(result.vcg_task_allocation || {})
+                    .map(([task, agent]) => `${task}: ${agent}`)
+                    .join(' · ') || 'No task allocation returned.';
+            document.getElementById('apsDiagnosisTitle').textContent = diagnosis.problem_title;
+            document.getElementById('apsDiagnosisDescription').textContent = diagnosis.problem_description;
+            document.getElementById('apsDiagnosisRootCause').textContent = diagnosis.root_cause;
+            document.getElementById('apsRisk').textContent = diagnosis.risk_if_unresolved;
+            const steps = document.getElementById('apsRemediationSteps');
+            steps.replaceChildren();
+            (diagnosis.remediation_steps || []).forEach(step => {
+                const container = document.createElement('div');
+                container.className = 'dataset-remediation-step';
+                const title = document.createElement('div');
+                title.className = 'rem-action';
+                title.textContent = `${step.step_number}. ${step.action}`;
+                const detail = document.createElement('div');
+                detail.className = 'rem-detail';
+                detail.textContent = step.detail;
+                const impact = document.createElement('div');
+                impact.className = 'rem-impact';
+                impact.textContent = step.expected_impact;
+                container.append(title, detail, impact);
+                steps.appendChild(container);
+            });
+            document.getElementById('apsLlmStatus').textContent =
+                diagnosis.llm_powered
+                    ? `Explanation generated by ${diagnosis.model}. Review it before taking action.`
+                    : diagnosis.llm_error
+                        ? `LLM unavailable; showing local evidence-based recommendation. ${diagnosis.llm_error}`
+                        : 'Local recommendation shown; no record data was sent to an LLM.';
+
+            status.textContent = result.anomaly_detected
+                ? 'Prediction complete: risk exceeds threshold'
+                : 'Prediction complete: risk is below threshold';
+            panel.classList.add('visible');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (error) {
+            status.className = 'system-status status-warn';
+            status.textContent = `Prediction failed: ${error.message}`;
+            console.error('APS prediction error:', error);
+        } finally {
+            buttons.forEach(button => { button.disabled = false; });
+        }
+    }
+
+    document.getElementById('apsFeatureSearch').addEventListener('input', event => {
+        const query = event.target.value.trim().toLowerCase();
+        document.querySelectorAll('.dataset-feature').forEach(field => {
+            field.hidden = !field.dataset.featureName.includes(query);
+        });
+    });
+    loadApsFeatureSchema();
 
     async function fetchTelemetry() {
         try {

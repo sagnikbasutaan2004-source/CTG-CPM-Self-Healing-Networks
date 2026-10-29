@@ -73,6 +73,67 @@ class MultiAgentRemediator:
                 self.gnn_model = None
                 self.gnn_kind = "none"
 
+    @staticmethod
+    def analyze_aps_failure_risk(
+        telemetry: Dict[str, Any],
+        failure_probability: float,
+        baseline_means: Dict[str, float],
+        baseline_stds: Dict[str, float],
+        decision_threshold: float,
+    ) -> Dict[str, Any]:
+        """Route labelled APS model output through CTG-CPM attribution and VCG stages."""
+        risk = float(failure_probability)
+        if not np.isfinite(risk) or not 0.0 <= risk <= 1.0:
+            raise ValueError("failure_probability must be finite and between 0 and 1.")
+        threshold = float(decision_threshold)
+        if not np.isfinite(threshold) or not 0.0 <= threshold <= 1.0:
+            raise ValueError("decision_threshold must be finite and between 0 and 1.")
+
+        measured_features = {
+            name: float(value)
+            for name, value in telemetry.items()
+            if isinstance(value, (int, float)) and np.isfinite(value)
+        }
+        directions = {name: "absolute" for name in measured_features}
+        characteristic = ShapleyAttributor.build_dynamic_characteristic_fn(
+            measured_features,
+            baseline_means=baseline_means,
+            baseline_stds=baseline_stds,
+            directions=directions,
+        )
+        attribution = ShapleyAttributor.calculate_shapley_values(
+            list(measured_features), characteristic
+        )
+
+        agents = [
+            "Agent1_Diagnostician",
+            "Agent2_Bargainer",
+            "Agent3_Executor",
+        ]
+        tasks = [
+            "RootCauseAttribution",
+            "GameTheoreticNegotiation",
+            "CounterfactualProjection",
+        ]
+        risk_telemetry = {**measured_features, "anomaly_stress": risk}
+        bids = VCGAuctionAllocator.compute_dynamic_bids(
+            agents, tasks, risk_telemetry
+        )
+        allocation = VCGAuctionAllocator().allocate_tasks(agents, tasks, bids)
+
+        return {
+            "failure_probability": risk,
+            "decision_threshold": threshold,
+            "anomaly_detected": risk >= threshold,
+            "shapley_root_cause_attribution": attribution,
+            "vcg_task_allocation": allocation,
+            "repair_effect_claim": False,
+            "limitation": (
+                "APS labels do not contain intervention costs or repair outcomes; "
+                "no SPE payoff or counterfactual repair effect is inferred."
+            ),
+        }
+
     # ------------------------------------------------------------------
     # Deployment hook: subclasses or wiring can override to push a command
     # to a real device. The default does nothing and reports "not deployed".

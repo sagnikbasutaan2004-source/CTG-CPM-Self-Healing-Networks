@@ -122,11 +122,25 @@ if __name__ == "__main__":
             f"Usable: {result['usable_features']}"
         )
         print(
+            f"Model: {result['selected_model']} | "
+            f"validation-selected F1 threshold={result['selected_threshold']:.6g}"
+        )
+        print(
             f"Held-out test: TP={metrics['tp']} FP={metrics['fp']} "
             f"FN={metrics['fn']} TN={metrics['tn']} | "
             f"Precision={metrics['precision']:.4f} "
             f"Recall={metrics['recall']:.4f} "
-            f"F1={metrics['f1']:.4f}"
+            f"Specificity={metrics['specificity']:.4f} "
+            f"F1={metrics['f1']:.4f} Accuracy={metrics['accuracy']:.4f} "
+            f"AP={metrics['average_precision']:.4f}"
+        )
+        baseline = result["baseline_metrics"]
+        print(
+            "Robust-statistics baseline: "
+            f"Precision={baseline['precision']:.4f} "
+            f"Recall={baseline['recall']:.4f} "
+            f"Specificity={baseline['specificity']:.4f} "
+            f"F1={baseline['f1']:.4f}"
         )
         print(
             f"UCI challenge cost (10*FP + 500*FN): "
@@ -135,7 +149,10 @@ if __name__ == "__main__":
             f"({metrics['challenge_cost_reduction_percent']:.1f}% lower)"
         )
         print("VCG allocation:", result["vcg_task_assignment"])
-        print("Feature attribution:", result["representative_record"]["feature_attribution_percent"])
+        print(
+            "Feature attribution:",
+            result["representative_record"]["feature_attribution_percent"],
+        )
         print("\nNo counterfactual intervention result is claimed for this dataset.")
     else:
         run_live_laptop_demo()

@@ -145,6 +145,179 @@ Based on this analysis, provide your response in EXACTLY this JSON format (no ma
         return _generate_fallback_diagnosis(telemetry, shapley_attribution, counterfactual_scenarios, mode, str(e))
 
 
+def generate_aps_diagnosis_and_remediation(
+    failure_probability: float,
+    decision_threshold: float,
+    feature_values: Dict[str, float],
+    feature_attribution: Dict[str, float],
+    use_llm: bool = True,
+) -> Dict[str, Any]:
+    """Generate an APS-specific explanation without inventing repair outcomes."""
+    detected = failure_probability >= decision_threshold
+    top_feature = (
+        max(feature_attribution, key=feature_attribution.get)
+        if feature_attribution else "no measured contributing feature"
+    )
+    probability_percent = f"{failure_probability * 100:.1f}%"
+    threshold_percent = f"{decision_threshold * 100:.1f}%"
+    if detected:
+        severity = "High" if failure_probability >= max(0.9, decision_threshold) else "Medium"
+        title = "APS failure risk exceeds the model threshold"
+        description = (
+            f"The trained APS classifier estimates a failure probability of "
+            f"{probability_percent}, above its validation-selected threshold of "
+            f"{threshold_percent}. The strongest statistical contributor in this "
+            f"record is {top_feature}; this attribution is not proof of cause."
+        )
+        risk = (
+            "Prioritize inspection using the vehicle maintenance procedure and "
+            "confirm the reported condition with current diagnostic measurements."
+        )
+        steps = [
+            {
+                "step_number": 1,
+                "action": "Validate the alert",
+                "detail": "Confirm the vehicle identity and review current APS fault codes and sensor readings.",
+                "expected_impact": "Checks that the model alert corresponds to a current, actionable condition.",
+            },
+            {
+                "step_number": 2,
+                "action": "Inspect the air-pressure system",
+                "detail": "Have qualified maintenance staff inspect the APS components associated with the vehicle's diagnostic codes.",
+                "expected_impact": "Identifies a serviceable fault before selecting a repair.",
+            },
+            {
+                "step_number": 3,
+                "action": "Apply approved maintenance procedures",
+                "detail": "Choose a repair only after physical inspection; record the intervention and post-repair outcome.",
+                "expected_impact": "Supports safe maintenance and creates evidence for future model validation.",
+            },
+        ]
+    else:
+        severity = "Low"
+        title = "No APS failure alert at the selected threshold"
+        description = (
+            f"The trained APS classifier estimates a failure probability of "
+            f"{probability_percent}, below its validation-selected threshold of "
+            f"{threshold_percent}. This is a model prediction, not a guarantee "
+            f"that the vehicle is fault-free."
+        )
+        risk = (
+            "Continue routine monitoring and follow existing inspection schedules; "
+            "do not use this prediction alone to defer required maintenance."
+        )
+        steps = [
+            {
+                "step_number": 1,
+                "action": "Continue scheduled monitoring",
+                "detail": "Retain the normal inspection schedule and review any new diagnostic codes.",
+                "expected_impact": "Maintains existing safety controls.",
+            },
+            {
+                "step_number": 2,
+                "action": "Escalate new symptoms",
+                "detail": "Use qualified maintenance procedures if fresh faults or abnormal pressure readings appear.",
+                "expected_impact": "Avoids relying on a single model result when conditions change.",
+            },
+        ]
+
+    fallback = {
+        "severity": severity,
+        "problem_title": title,
+        "problem_description": description,
+        "root_cause": (
+            f"{top_feature} is the highest-weighted statistical contributor in the "
+            "submitted record. APS feature names are anonymized and this is not a causal diagnosis."
+        ),
+        "risk_if_unresolved": risk,
+        "remediation_steps": steps,
+        "expected_outcome": (
+            "A qualified person validates the alert and decides on maintenance. "
+            "Repair effectiveness has not been measured by this dataset."
+        ),
+        "health_score_before": None,
+        "health_score_after": None,
+        "estimated_fix_time": "Not estimated; intervention outcomes are not in the dataset.",
+        "truck_roll_avoided": "Not measured.",
+        "downtime_prevented": "Not measured.",
+        "llm_powered": False,
+        "confidence_note": (
+            "This is a supervised model prediction on Scania APS data; it is not "
+            "a verified diagnosis or repair-effect estimate."
+        ),
+    }
+
+    prompt = f"""Explain this CTG-CPM prediction for one Scania APS record.
+The model was trained before this request. Do not retrain it.
+Failure probability: {probability_percent}
+Decision threshold selected on training validation data: {threshold_percent}
+Alert: {detected}
+Top statistical feature values: {feature_values}
+Feature attribution percentages (statistical, not causal): {feature_attribution}
+
+The APS feature names are anonymized. Dataset labels do not contain intervention
+outcomes. Never claim a repair will work, invent a physical meaning for a feature,
+or claim a counterfactual outcome. Recommend human validation and approved
+maintenance procedures. Nothing is auto-deployed.
+
+Return JSON only with these keys:
+severity, problem_title, problem_description, root_cause, risk_if_unresolved,
+remediation_steps (array of objects with step_number, action, detail, expected_impact),
+expected_outcome, estimated_fix_time, truck_roll_avoided, downtime_prevented.
+"""
+    if not use_llm:
+        return fallback
+
+    try:
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a cautious predictive-maintenance assistant. "
+                        "Use only the supplied evidence; return valid JSON, no markdown."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=1200,
+        )
+        import json
+        import re
+
+        text = completion.choices[0].message.content.strip()
+        text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+            if text.endswith("```"):
+                text = text[:-3]
+        match = re.search(r"\{[\s\S]*\}", text)
+        diagnosis = json.loads(match.group(0) if match else text.strip())
+        required = {
+            "severity",
+            "problem_title",
+            "problem_description",
+            "root_cause",
+            "risk_if_unresolved",
+            "remediation_steps",
+            "expected_outcome",
+        }
+        if not required.issubset(diagnosis) or not isinstance(
+            diagnosis["remediation_steps"], list
+        ):
+            raise ValueError("LLM response is missing required APS diagnosis fields.")
+        return {
+            **fallback,
+            **diagnosis,
+            "llm_powered": True,
+            "model": "openai/gpt-oss-20b",
+        }
+    except Exception as exc:
+        return {**fallback, "llm_error": str(exc)}
+
+
 def _top_shapley_cause(shapley) -> str:
     """Returns a human-readable top contributor from the computed Shapley attribution."""
     try:
