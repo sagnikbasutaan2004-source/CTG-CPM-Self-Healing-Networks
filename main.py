@@ -15,6 +15,8 @@ from telemetry_collector import LaptopTelemetryCollector, SyntheticTelemetryGene
 from counterfactual_engine import CounterfactualGenerator
 from agentic_remediator import MultiAgentRemediator
 from game_engine import BargainingGameTree
+from aps_dataset import run_benchmark
+from pathlib import Path
 
 def print_banner():
     print("=" * 75)
@@ -91,6 +93,7 @@ if __name__ == "__main__":
     print("1. Live Laptop Host Telemetry (Real Kafka Streamed) & Remediation Recommendation")
     print("2. 5G Optical Backhaul Fiber Anomaly (Real Kafka Streamed & PyTorch Models)")
     print("3. Solve Game-Theoretic Investment & Bargaining Game (SPE)")
+    print("4. Evaluate UCI Scania APS real operational dataset")
     print("   (Produces a remediation RECOMMENDATION; nothing is auto-deployed.)")
 
     if len(sys.argv) > 1:
@@ -108,5 +111,31 @@ if __name__ == "__main__":
         print("\n=== EXTENSIVE FORM GAME BACKWARD INDUCTION ===")
         print(sol["summary"])
         print("\nFull SPE Path:", sol["spe_path"])
+    elif choice == "4":
+        result = run_benchmark(Path("data") / "aps_failure")
+        metrics = result["metrics"]
+        print(f"\n{result['dataset']} (UCI DOI: {result['doi']})")
+        print(
+            f"Train rows: {result['training_rows']} | "
+            f"Test rows: {result['test_rows']} | "
+            f"Features: {result['feature_count']} | "
+            f"Usable: {result['usable_features']}"
+        )
+        print(
+            f"Held-out test: TP={metrics['tp']} FP={metrics['fp']} "
+            f"FN={metrics['fn']} TN={metrics['tn']} | "
+            f"Precision={metrics['precision']:.4f} "
+            f"Recall={metrics['recall']:.4f} "
+            f"F1={metrics['f1']:.4f}"
+        )
+        print(
+            f"UCI challenge cost (10*FP + 500*FN): "
+            f"{metrics['challenge_cost']} vs "
+            f"{metrics['all_negative_baseline_cost']} for always-negative "
+            f"({metrics['challenge_cost_reduction_percent']:.1f}% lower)"
+        )
+        print("VCG allocation:", result["vcg_task_assignment"])
+        print("Feature attribution:", result["representative_record"]["feature_attribution_percent"])
+        print("\nNo counterfactual intervention result is claimed for this dataset.")
     else:
         run_live_laptop_demo()

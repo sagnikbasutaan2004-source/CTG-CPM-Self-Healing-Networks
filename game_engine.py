@@ -177,7 +177,9 @@ class VCGAuctionAllocator:
         Dynamically computes agent bids b_{i,j} for tasks based on raw telemetry stress and specialized fitness functions.
         Formula: b_{i,j} = BaseCapability_{i,j} * (1 + StressFactor * AgentTaskWeight_{i,j})
         """
-        if "osnr_db" in telemetry:
+        if "anomaly_stress" in telemetry:
+            stress = min(1.0, max(0.0, float(telemetry["anomaly_stress"])))
+        elif "osnr_db" in telemetry:
             osnr = float(telemetry.get("osnr_db", 22.0))
             temp = float(telemetry.get("temperature_celsius", 50.0))
             stress = min(1.0, max(0.0, (25.0 - osnr) / 10.0 + (temp - 45.0) / 40.0))
@@ -261,7 +263,12 @@ class ShapleyAttributor:
     """
 
     @staticmethod
-    def build_dynamic_characteristic_fn(telemetry: Dict[str, Any], baseline_means: Dict[str, float] = None, baseline_stds: Dict[str, float] = None):
+    def build_dynamic_characteristic_fn(
+        telemetry: Dict[str, Any],
+        baseline_means: Dict[str, float] = None,
+        baseline_stds: Dict[str, float] = None,
+        directions: Dict[str, str] = None,
+    ):
         """
         Dynamically constructs a characteristic function v(S) based on raw telemetry values
         and non-linear statistical Z-score metric deviations.
@@ -285,16 +292,25 @@ class ShapleyAttributor:
                 std = stds.get(metric, 10.0)
                 std = std if std > 1e-5 else 1.0
 
-                if metric == "osnr_db":
+                direction = (directions or {}).get(
+                    metric, "lower" if metric == "osnr_db" else "higher"
+                )
+                if direction == "lower":
                     z = (mean - float(val)) / std
-                else:
+                elif direction == "higher":
                     z = (float(val) - mean) / std
+                elif direction == "absolute":
+                    z = abs(float(val) - mean) / std
+                else:
+                    raise ValueError(
+                        f"Unknown feature direction for {metric}: {direction}"
+                    )
                 z_scores[metric] = max(0.0, z)
 
         def characteristic_fn(subset: Tuple[str, ...]) -> float:
             score = 0.0
             for m in subset:
-                z = z_scores.get(m, 0.5)
+                z = z_scores.get(m, 0.0)
                 # Quadratic non-linear anomaly weight formula
                 score += (z ** 1.6) * 15.0
             return score
